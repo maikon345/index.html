@@ -3,260 +3,734 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interfone Virtual - Linha de Transmissão</title>
+    <title>Sistema Interfone Virtual</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background: linear-gradient(135deg, #25d366 0%, #128C7E 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .container { background: white; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); max-width: 450px; width: 100%; overflow: hidden; }
-        .header { background: #075e54; color: white; padding: 25px; text-align: center; }
-        .header h1 { font-size: 1.3rem; }
-        .content { padding: 25px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        .contact-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 10px; }
-        .contact-row input { padding: 12px; border: 2px solid #e1e4e8; border-radius: 8px; font-size: 0.95rem; width: 100%; }
-        .btn-del { width: 36px; height: 36px; background: #dc3545; color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
-        .btn-add { width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; margin: 15px 0; cursor: pointer; font-size: 1rem; }
-        .btn-gen { width: 100%; padding: 16px; background: #25d366; color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
+        body { 
+            background: #f3f4f6; 
+            min-height: 100vh; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         
-        #qrSection { display: none; text-align: center; margin-top: 25px; padding-top: 20px; border-top: 2px dashed #ddd; }
-        #qrSection.show { display: block; }
-        .qr-box { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); display: inline-block; border: 3px solid #25d366; }
-        .test-btn { display: inline-block; margin-top: 15px; padding: 10px 20px; background: #ffc107; color: #333; text-decoration: none; border-radius: 20px; font-weight: 600; }
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
         
-        /* Modo Visitante - Lista Simples */
-        .visitor-mode { display: none; }
-        .visitor-mode.show { display: block; animation: fadeIn 0.5s ease; }
-        
-        .broadcast-card { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; }
-        .broadcast-icon { font-size: 3rem; margin-bottom: 10px; }
-        .broadcast-card h2 { color: #075e54; margin-bottom: 5px; }
-        .broadcast-card p { color: #666; font-size: 0.9rem; }
-        
-        .message-preview { background: #dcf8c6; border-radius: 12px; padding: 15px; margin-bottom: 25px; position: relative; text-align: left; }
-        .message-preview::before { content: '💬 Mensagem:'; display: block; font-weight: bold; color: #075e54; margin-bottom: 5px; }
-        
-        .contact-btn { 
+        .header h1 { 
+            font-size: 2rem; 
+            margin-bottom: 5px; 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
-            padding: 15px; 
-            margin-bottom: 12px; 
-            background: white; 
-            border: 2px solid #25d366; 
-            border-radius: 12px; 
-            text-decoration: none; 
-            color: #333; 
-            transition: all 0.3s;
-            cursor: pointer;
-            width: 100%;
-            text-align: left;
+            justify-content: center; 
+            gap: 10px; 
         }
-        .contact-btn:hover { background: #f0f9f4; transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .contact-btn.sent { background: #d4edda; border-color: #28a745; opacity: 0.7; }
-        .contact-btn.sent::after { content: '✓'; margin-left: auto; color: #28a745; font-weight: bold; font-size: 1.2rem; }
         
-        .avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem; flex-shrink: 0; }
-        .contact-info { flex: 1; }
-        .contact-name { font-weight: 700; color: #075e54; font-size: 1.1rem; }
-        .contact-phone { color: #666; font-size: 0.85rem; }
-        .wa-arrow { color: #25d366; font-size: 1.5rem; }
+        .header p { 
+            opacity: 0.9; 
+            font-size: 1rem; 
+            letter-spacing: 0.5px;
+        }
         
-        .hidden { display: none !important; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Container principal */
+        .container { 
+            max-width: 900px; 
+            margin: 30px auto; 
+            padding: 0 20px; 
+        }
+        
+        /* Card de configuração */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            color: #374151;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+        
+        /* Alerta amarelo */
+        .alert-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            color: #92400e;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .alert-box strong { 
+            display: block; 
+            margin-bottom: 8px; 
+            color: #78350f; 
+        }
+        
+        /* Formulários */
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+        
+        /* Botão principal */
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #22c55e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: #16a34a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        }
+        
+        /* Seção de placas geradas */
+        .placas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .placas-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-secondary {
+            padding: 10px 20px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-secondary:hover { background: #4b5563; }
+        
+        /* Grade de placas */
+        .placas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 40px;
+        }
+        
+        /* ============================================
+           MODELO DA PLACA 10x15cm - COM ESPAÇAMENTO CORRETO
+           ============================================ */
+        .placa-wrapper {
+            width: 10cm;
+            height: auto;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .placa-fisica {
+            width: 10cm;
+            height: 15cm;
+            background: white;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        /* Cabeçalho verde */
+        .placa-header {
+            background: #22c55e;
+            color: white;
+            padding: 20px 12px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        .placa-titulo {
+            font-size: 17px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            word-spacing: 2px;
+        }
+        
+        .placa-subtitulo {
+            font-size: 11px;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
+            word-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .placa-local {
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 6px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* Área QR */
+        .placa-qr-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+            background: #fafafa;
+        }
+        
+        .qr-wrapper {
+            position: relative;
+            padding: 10px;
+            background: white;
+            border: 3px solid #22c55e;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .qr-corner {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 3px solid #22c55e;
+        }
+        
+        .qr-corner.tl { top: -3px; left: -3px; border-right: none; border-bottom: none; }
+        .qr-corner.tr { top: -3px; right: -3px; border-left: none; border-bottom: none; }
+        .qr-corner.bl { bottom: -3px; left: -3px; border-right: none; border-top: none; }
+        .qr-corner.br { bottom: -3px; right: -3px; border-left: none; border-top: none; }
+        
+        .qr-container img, .qr-container canvas {
+            width: 4.2cm !important;
+            height: 4.2cm !important;
+            display: block;
+        }
+        
+        .qr-texto {
+            font-size: 10px;
+            color: #555;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            word-spacing: 1px;
+        }
+        
+        /* Ícones inferiores */
+        .placa-icons {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 8px;
+            background: #e8f5e9;
+            border-top: 1px solid #c8e6c9;
+            gap: 5px;
+        }
+        
+        .icon-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .icon-symbol {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .icon-text {
+            font-size: 9px;
+            color: #2e7d32;
+            font-weight: bold;
+            line-height: 1.3;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Instruções */
+        .placa-instrucoes {
+            padding: 12px 10px;
+            background: #fff3e0;
+            border-top: 1px solid #ffe0b2;
+        }
+        
+        .inst-titulo {
+            color: #e65100;
+            font-weight: bold;
+            font-size: 11px;
+            text-align: center;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            word-spacing: 2px;
+        }
+        
+        .inst-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .inst-item {
+            font-size: 9.5px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 4px;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
+        }
+        
+        /* Footer */
+        .placa-footer {
+            background: #004d40;
+            color: white;
+            text-align: center;
+            padding: 8px 5px;
+            font-size: 8px;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+            word-spacing: 1px;
+        }
+        
+        /* Botões de ação da placa */
+        .placa-acoes {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn-pdf {
+            flex: 1;
+            padding: 10px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .btn-copiar {
+            flex: 1;
+            padding: 10px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        /* Modo visitante */
+        .visitor-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            display: none;
+        }
+        
+        .visitor-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .visitor-icon { font-size: 4rem; margin-bottom: 20px; }
+        .visitor-title { color: #059669; font-size: 1.8rem; margin-bottom: 10px; }
+        .visitor-text { color: #6b7280; margin-bottom: 30px; }
+        
+        /* Print */
+        @media print {
+            @page { 
+                size: 12cm 17cm; 
+                margin: 1cm; 
+            }
+            
+            body { background: white; }
+            .header, .card, .placa-acoes, .btn-secondary { display: none !important; }
+            
+            .placa-wrapper {
+                page-break-after: always;
+                box-shadow: none;
+                margin: 0;
+            }
+            
+            .placa-fisica {
+                box-shadow: none;
+                border: 2px solid #000;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            .placas-grid { grid-template-columns: 1fr; }
+            .placa-wrapper { 
+                transform: scale(0.8); 
+                transform-origin: top center; 
+                margin-bottom: -60px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>📱 Interfone Virtual</h1>
-        <p id="subtitle">Sistema de Transmissão</p>
+<!-- HEADER -->
+<div class="header" id="adminHeader">
+    <h1>🏢 Sistema Interfone Virtual</h1>
+    <p>Gerador de Placas Físicas 10x15cm</p>
+</div>
+
+<!-- MODO ADMIN -->
+<div id="adminMode">
+    <div class="container">
+        <!-- Configuração -->
+        <div class="card">
+            <div class="card-title">⚙️ Configurar Nova Placa</div>
+            
+            <div class="alert-box">
+                <strong>💡 Como funciona:</strong>
+                <div>1. Cada placa recebe um QR Code único</div>
+                <div>2. Quem escanear cairá na página de cadastro (se vazio) ou contatos (se já tiver dados)</div>
+                <div>3. Imprima em papel 10x15cm (tamanho de foto) e plastifique</div>
+            </div>
+
+            <div class="form-group">
+                <label>🏷️ Identificação do Local</label>
+                <input type="text" id="nomeLocal" placeholder="Ex: Apartamento 101, Casa dos Silva..." value="CASA">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>📋 Tipo</label>
+                    <select id="tipoLocal">
+                        <option value="residencial">🏠 Residencial</option>
+                        <option value="comercial">🏢 Comercial</option>
+                        <option value="condominio">🏘️ Condomínio</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🔢 Quantidade de Placas</label>
+                    <input type="number" id="quantidade" min="1" max="50" value="1">
+                </div>
+            </div>
+            
+            <button class="btn-primary" onclick="gerarPlacas()">
+                🚀 Gerar Placas Agora
+            </button>
+        </div>
+
+        <!-- Placas Geradas -->
+        <div id="placasContainer" style="display: none;">
+            <div class="placas-header">
+                <div class="placas-title">📦 Placas Geradas (Prontas para Imprimir)</div>
+                <button class="btn-secondary" onclick="baixarTodasPlacas()">
+                    📄 Baixar Todas em PDF
+                </button>
+            </div>
+            
+            <div class="placas-grid" id="gridPlacas"></div>
+        </div>
     </div>
-    
-    <div class="content">
-        
-        <!-- MODO PROPRIETÁRIO -->
-        <div id="ownerMode">
-            <div style="margin-bottom: 15px; color: #555; font-size: 0.9rem;">
-                Configure os contatos para transmissão:
-            </div>
-            
-            <div id="contactsList"></div>
-            
-            <button class="btn-add" onclick="addContact()">➕ Adicionar Contato</button>
-            
-            <div style="margin-bottom: 15px;">
-                <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 5px;">Mensagem:</label>
-                <input type="text" id="msgText" value="Olá! Estou na porta/interfone.">
-            </div>
-            
-            <button class="btn-gen" onclick="generateQR()">📢 Gerar QR Code</button>
-            
-            <div id="qrSection">
-                <div class="qr-box"><div id="qrcode"></div></div>
-                <p style="margin-top: 15px; color: #075e54; font-weight: 600;">Aponte a câmera do celular</p>
-                <a href="#" id="testLink" class="test-btn" target="_blank">👆 Testar Agora</a>
-            </div>
-        </div>
+</div>
 
-        <!-- MODO VISITANTE -->
-        <div id="visitorMode" class="visitor-mode">
-            <div class="broadcast-card">
-                <div class="broadcast-icon">📡</div>
-                <h2>Linha de Transmissão</h2>
-                <p>Toque nos contatos abaixo para enviar</p>
-            </div>
-            
-            <div class="message-preview" id="displayMsg"></div>
-            
-            <div id="buttonsContainer"></div>
-            
-            <div style="text-align: center; margin-top: 20px; color: #666; font-size: 0.85rem;">
-                💡 Você pode enviar para um ou todos os contatos acima
-            </div>
-            
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="window.location.href = window.location.pathname" style="color: #128C7E; text-decoration: none; font-size: 0.9rem;">🔄 Criar meu próprio QR Code</a>
-            </div>
-        </div>
-
+<!-- MODO VISITANTE -->
+<div class="visitor-container" id="visitorMode">
+    <div class="visitor-card">
+        <div class="visitor-icon">📱</div>
+        <h2 class="visitor-title">Interfone Virtual</h2>
+        <p class="visitor-text" id="visitorText">Placa não configurada</p>
     </div>
 </div>
 
 <script>
-// Detectar modo ao carregar
+const { jsPDF } = window.jspdf;
+let placasGeradas = [];
+
+// Detectar modo visitante
 window.onload = function() {
-    // Verificar se tem hash na URL (modo visitante)
-    if (window.location.hash && window.location.hash.length > 1) {
-        const data = decodeURIComponent(window.location.hash.substring(1));
-        console.log('Modo visitante detectado:', data);
-        loadVisitorMode(data);
-    } else {
-        // Modo proprietário - adicionar contatos iniciais
-        addContact();
-        addContact();
+    const params = new URLSearchParams(window.location.search);
+    const placaId = params.get('placa');
+    
+    if (placaId) {
+        mostrarModoVisitante(placaId);
     }
 };
 
-let contactCount = 0;
-
-function addContact() {
-    contactCount++;
-    const div = document.createElement('div');
-    div.className = 'contact-row';
-    div.innerHTML = `
-        <input type="text" placeholder="Nome" class="c-name" maxlength="20">
-        <input type="tel" placeholder="WhatsApp" class="c-phone" maxlength="13">
-        <button class="btn-del" onclick="this.parentElement.remove()">×</button>
-    `;
-    document.getElementById('contactsList').appendChild(div);
-    
-    div.querySelector('.c-phone').addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/\D/g, '');
-    });
+function gerarID() {
+    const timestamp = Date.now().toString(36).toUpperCase().substring(0,6);
+    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `${timestamp}-${random}`;
 }
 
-function generateQR() {
-    const rows = document.querySelectorAll('.contact-row');
-    const contacts = [];
+function gerarPlacas() {
+    const nomeLocal = document.getElementById('nomeLocal').value || 'Casa';
+    const tipo = document.getElementById('tipoLocal').value;
+    const qtd = parseInt(document.getElementById('quantidade').value) || 1;
+    const urlBase = window.location.href.split('?')[0];
     
-    rows.forEach(row => {
-        const name = row.querySelector('.c-name').value.trim();
-        let phone = row.querySelector('.c-phone').value.trim();
+    const container = document.getElementById('gridPlacas');
+    container.innerHTML = '';
+    placasGeradas = [];
+    
+    for(let i = 0; i < qtd; i++) {
+        const idPlaca = gerarID();
+        const urlCompleta = `${urlBase}?placa=${idPlaca}&tipo=${tipo}`;
         
-        if (name && phone) {
-            phone = phone.replace(/\D/g, '');
-            if (phone.length >= 10) {
-                if (!phone.startsWith('55')) phone = '55' + phone;
-                contacts.push(encodeURIComponent(name) + '|' + phone);
-            }
-        }
-    });
-    
-    if (contacts.length === 0) {
-        alert('Adicione pelo menos um contato válido');
-        return;
+        placasGeradas.push({ id: idPlaca, url: urlCompleta, nome: nomeLocal });
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'placa-wrapper';
+        wrapper.id = `wrapper-${idPlaca}`;
+        wrapper.innerHTML = `
+            <div class="placa-fisica" id="placa-${idPlaca}">
+                <div class="placa-header">
+                    <div class="placa-titulo">INTERFONE VIRTUAL</div>
+                    <div class="placa-subtitulo">Toque para chamar via WhatsApp</div>
+                    <div class="placa-local">${nomeLocal.toUpperCase()}</div>
+                </div>
+                
+                <div class="placa-qr-area">
+                    <div class="qr-wrapper">
+                        <div class="qr-corner tl"></div>
+                        <div class="qr-corner tr"></div>
+                        <div class="qr-corner bl"></div>
+                        <div class="qr-corner br"></div>
+                        <div class="qr-container" id="qr-${idPlaca}"></div>
+                    </div>
+                    <div class="qr-texto">Escaneie com a câmera do celular</div>
+                </div>
+                
+                <div class="placa-icons">
+                    <div class="icon-item">
+                        <div class="icon-symbol">📷</div>
+                        <div class="icon-text">Aponte a<br>câmera</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon-symbol">👆</div>
+                        <div class="icon-text">Toque no<br>link</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="icon-symbol">💬</div>
+                        <div class="icon-text">Fale<br>direto</div>
+                    </div>
+                </div>
+                
+                <div class="placa-instrucoes">
+                    <div class="inst-titulo">📋 COMO USAR:</div>
+                    <ul class="inst-lista">
+                        <li class="inst-item">1. Abra a câmera do celular</li>
+                        <li class="inst-item">2. Aponte para o QR Code acima</li>
+                        <li class="inst-item">3. Toque no link que aparecer</li>
+                        <li class="inst-item">4. Escolha o contato e envie!</li>
+                    </ul>
+                </div>
+                
+                <div class="placa-footer">
+                    🔒 Sistema Seguro • Direto WhatsApp • Não precisa salvar número
+                </div>
+            </div>
+            
+            <div class="placa-acoes">
+                <button class="btn-pdf" onclick="baixarPDF('${idPlaca}')">📄 Baixar PDF</button>
+                <button class="btn-copiar" onclick="copiarURL('${urlCompleta}')">🔗 Copiar Link</button>
+            </div>
+        `;
+        
+        container.appendChild(wrapper);
+        
+        // Gerar QR Code
+        setTimeout(() => {
+            new QRCode(document.getElementById(`qr-${idPlaca}`), {
+                text: urlCompleta,
+                width: 160,
+                height: 160,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }, 100 * i);
     }
     
-    const msg = document.getElementById('msgText').value.trim() || 'Olá!';
-    const data = contacts.join(',') + '@' + encodeURIComponent(msg);
-    
-    // Criar URL limpa
-    const baseUrl = window.location.href.split('#')[0];
-    const finalUrl = baseUrl + '#' + encodeURIComponent(data);
-    
-    console.log('URL gerada:', finalUrl);
-    
-    // Gerar QR
-    document.getElementById('qrcode').innerHTML = '';
-    new QRCode(document.getElementById('qrcode'), {
-        text: finalUrl,
-        width: 200,
-        height: 200,
-        colorDark: "#075e54",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-    });
-    
-    document.getElementById('qrSection').classList.add('show');
-    document.getElementById('testLink').href = finalUrl;
+    document.getElementById('placasContainer').style.display = 'block';
+    document.getElementById('placasContainer').scrollIntoView({behavior: 'smooth'});
 }
 
-function loadVisitorMode(data) {
+async function baixarPDF(idPlaca) {
+    const elemento = document.getElementById(`placa-${idPlaca}`);
+    
     try {
-        console.log('Carregando dados:', data);
+        // Aguardar renderização completa
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Parse: nome|fone,nome|fone@msg
-        const [contactsPart, msgEncoded] = data.split('@');
-        const msg = msgEncoded ? decodeURIComponent(msgEncoded) : 'Olá!';
-        
-        document.getElementById('ownerMode').classList.add('hidden');
-        document.getElementById('visitorMode').classList.add('show');
-        document.getElementById('subtitle').textContent = 'Modo Transmissão';
-        document.getElementById('displayMsg').textContent = msg;
-        
-        const container = document.getElementById('buttonsContainer');
-        container.innerHTML = '';
-        
-        const contacts = contactsPart.split(',');
-        const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
-        
-        contacts.forEach((contact, index) => {
-            const [nameEnc, phone] = contact.split('|');
-            if (!nameEnc || !phone) return;
-            
-            const name = decodeURIComponent(nameEnc);
-            const color = colors[index % colors.length];
-            
-            const btn = document.createElement('a');
-            btn.className = 'contact-btn';
-            btn.href = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-            btn.target = '_blank';
-            btn.innerHTML = `
-                <div class="avatar" style="background: ${color};">${name.charAt(0).toUpperCase()}</div>
-                <div class="contact-info">
-                    <div class="contact-name">${name}</div>
-                    <div class="contact-phone">📱 ${phone}</div>
-                </div>
-                <div class="wa-arrow">💬</div>
-            `;
-            
-            // Marcar como enviado quando clicar
-            btn.onclick = function() {
-                setTimeout(() => {
-                    btn.classList.add('sent');
-                }, 1000);
-            };
-            
-            container.appendChild(btn);
+        const canvas = await html2canvas(elemento, {
+            scale: 4, // Alta resolução
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            width: elemento.offsetWidth,
+            height: elemento.offsetHeight,
+            logging: false,
+            letterRendering: true, // Importante para espaçamento de texto
+            allowTaint: true
         });
         
-    } catch (e) {
-        console.error('Erro:', e);
-        alert('Erro ao carregar contatos. O QR Code pode estar incompleto.');
-        window.location.href = window.location.pathname;
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        
+        // PDF com margem de 1cm
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'cm',
+            format: [12, 17], // 10x15 + 1cm margem cada lado
+            putOnlyUsedFonts: true,
+            compress: false // Melhor qualidade
+        });
+        
+        // Adicionar imagem com margem de 1cm
+        pdf.addImage(imgData, 'PNG', 1, 1, 10, 15);
+        
+        pdf.save(`Placa_${idPlaca}.pdf`);
+        
+    } catch (err) {
+        console.error('Erro ao gerar PDF:', err);
+        alert('Erro ao gerar PDF. Tente novamente.');
     }
+}
+
+async function baixarTodasPlacas() {
+    if(placasGeradas.length === 0) return;
+    
+    const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'cm',
+        format: [12, 17],
+        putOnlyUsedFonts: true,
+        compress: false
+    });
+    
+    for(let i = 0; i < placasGeradas.length; i++) {
+        const id = placasGeradas[i].id;
+        const elemento = document.getElementById(`placa-${id}`);
+        
+        try {
+            const canvas = await html2canvas(elemento, {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                width: elemento.offsetWidth,
+                height: elemento.offsetHeight,
+                logging: false,
+                letterRendering: true,
+                allowTaint: true
+            });
+            
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            
+            if(i > 0) pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 1, 1, 10, 15);
+            
+        } catch (err) {
+            console.error('Erro na placa:', id, err);
+        }
+    }
+    
+    pdf.save(`Todas_Placas_${Date.now()}.pdf`);
+}
+
+function copiarURL(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert('🔗 Link copiado para a área de transferência!');
+    }).catch(() => {
+        // Fallback para navegadores antigos
+        const input = document.createElement('input');
+        input.value = url;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        alert('🔗 Link copiado!');
+    });
+}
+
+function mostrarModoVisitante(placaId) {
+    document.getElementById('adminHeader').style.display = 'none';
+    document.getElementById('adminMode').style.display = 'none';
+    document.getElementById('visitorMode').style.display = 'block';
+    document.getElementById('visitorText').textContent = `Placa ID: ${placaId} - Aguardando configuração`;
 }
 </script>
 

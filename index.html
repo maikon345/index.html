@@ -187,9 +187,7 @@
             gap: 40px;
         }
         
-        /* ============================================
-           MODELO DA PLACA 10x15cm - COM ESPAÇAMENTO CORRETO
-           ============================================ */
+        /* MODELO DA PLACA 10x15cm */
         .placa-wrapper {
             width: 10cm;
             height: auto;
@@ -471,7 +469,7 @@
             </div>
 
             <div class="form-group">
-                <label>🏷️ Identificação do Local</label>
+                <label>🏷️ Identificação do Local (opcional)</label>
                 <input type="text" id="nomeLocal" placeholder="Ex: Apartamento 101, Casa dos Silva..." value="">
             </div>
             
@@ -517,6 +515,7 @@
         <p class="visitor-text" id="visitorText">Placa não configurada</p>
     </div>
 </div>
+
 <script>
 const { jsPDF } = window.jspdf;
 let placasGeradas = [];
@@ -538,7 +537,7 @@ function gerarID() {
 }
 
 function gerarPlacas() {
-    const nomeLocal = document.getElementById('nomeLocal').value || 'Casa';
+    const nomeLocal = document.getElementById('nomeLocal').value || '';  // REMOVIDO 'Casa' - agora fica vazio mesmo
     const tipo = document.getElementById('tipoLocal').value;
     const qtd = parseInt(document.getElementById('quantidade').value) || 1;
     const urlBase = window.location.href.split('?')[0];
@@ -561,7 +560,7 @@ function gerarPlacas() {
                 <div class="placa-header">
                     <div class="placa-titulo">INTERFONE VIRTUAL</div>
                     <div class="placa-subtitulo">Toque para chamar via WhatsApp</div>
-                    <div class="placa-local">${nomeLocal.toUpperCase()}</div>
+                    ${nomeLocal ? `<div class="placa-local">${nomeLocal.toUpperCase()}</div>` : ''}
                 </div>
                 
                 <div class="placa-qr-area">
@@ -634,32 +633,29 @@ async function baixarPDF(idPlaca) {
     const elemento = document.getElementById(`placa-${idPlaca}`);
     
     try {
-        // Aguardar renderização completa
         await new Promise(resolve => setTimeout(resolve, 500));
         
         const canvas = await html2canvas(elemento, {
-            scale: 4, // Alta resolução
+            scale: 4,
             useCORS: true,
             backgroundColor: '#ffffff',
             width: elemento.offsetWidth,
             height: elemento.offsetHeight,
             logging: false,
-            letterRendering: true, // Importante para espaçamento de texto
+            letterRendering: true,
             allowTaint: true
         });
         
         const imgData = canvas.toDataURL('image/png', 1.0);
         
-        // PDF com margem de 1cm
         const pdf = new jsPDF({
             orientation: 'portrait',
             unit: 'cm',
-            format: [12, 17], // 10x15 + 1cm margem cada lado
+            format: [12, 17],
             putOnlyUsedFonts: true,
-            compress: false // Melhor qualidade
+            compress: false
         });
         
-        // Adicionar imagem com margem de 1cm
         pdf.addImage(imgData, 'PNG', 1, 1, 10, 15);
         
         pdf.save(`Placa_${idPlaca}.pdf`);
@@ -714,7 +710,6 @@ function copiarURL(url) {
     navigator.clipboard.writeText(url).then(() => {
         alert('🔗 Link copiado para a área de transferência!');
     }).catch(() => {
-        // Fallback para navegadores antigos
         const input = document.createElement('input');
         input.value = url;
         document.body.appendChild(input);

@@ -1,1 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interfone Virtual</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #25d366 0%, #128C7E 100%); min-height: 100vh; margin: 0; padding: 20px; }
+        .box { max-width: 400px; margin: 0 auto; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h1 { color: #075e54; text-align: center; font-size: 1.5rem; margin-bottom: 20px; }
+        .contato { display: grid; grid-template-columns: 1fr 1fr auto; gap: 5px; margin-bottom: 10px; }
+        input { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem; }
+        button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
+        .btn-del { background: #ff4444; color: white; }
+        .btn-add { background: #666; color: white; width: 100%; margin: 10px 0; padding: 12px; }
+        .btn-gerar { background: #25d366; color: white; width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; }
+        #qrcode { text-align: center; margin-top: 20px; display: none; }
+        #qrcode.show { display: block; }
+        .visitante { display: none; }
+        .visitante.show { display: block; }
+        .botao-zap { display: block; padding: 15px; margin: 10px 0; background: #25d366; color: white; text-decoration: none; border-radius: 10px; text-align: center; font-weight: bold; }
+        .msg { background: #dcf8c6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+    </style>
+</head>
+<body>
 
+<div class="box" id="tela1">
+    <h1>📱 Configurar Interfone</h1>
+    
+    <div id="lista"></div>
+    
+    <button class="btn-add" onclick="add()">➕ Adicionar Contato</button>
+    
+    <div style="margin-bottom: 15px;">
+        <label>Mensagem:</label>
+        <input type="text" id="msg" value="Ola estou na porta" style="width: 100%; margin-top: 5px;">
+    </div>
+    
+    <button class="btn-gerar" onclick="gerar()">📷 Gerar QR Code</button>
+    
+    <div id="qrcode">
+        <div style="background: white; padding: 20px; display: inline-block; border: 3px solid #25d366; border-radius: 10px; margin-top: 15px;">
+            <div id="codigo"></div>
+        </div>
+        <p style="color: #075e54; margin-top: 10px; font-weight: bold;">Aponte a camera do celular</p>
+        <a href="#" id="link-teste" target="_blank" style="color: #128C7E; display: block; margin-top: 10px;">👆 Testar aqui primeiro</a>
+    </div>
+</div>
+
+<div class="box visitante" id="tela2">
+    <h1>📡 Enviar Mensagem</h1>
+    <div class="msg" id="texto-msg"></div>
+    <div id="botoes"></div>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="#" onclick="location.href=location.pathname" style="color: #666; font-size: 0.9rem;">Criar meu QR Code</a>
+    </div>
+</div>
+
+<script>
+// Abre com hash? Modo visitante
+if(location.hash && location.hash.length > 3) {
+    document.getElementById('tela1').style.display = 'none';
+    document.getElementById('tela2').classList.add('show');
+    
+    // Decodifica
+    let dados = location.hash.substring(1);
+    let partes = dados.split('__');
+    let contatos = partes[0].split('_');
+    let mensagem = partes[1] ? decodeURIComponent(partes[1]) : 'Ola estou na porta';
+    
+    document.getElementById('texto-msg').textContent = mensagem;
+    
+    let html = '';
+    contatos.forEach(c => {
+        let [nome, numero] = c.split('-');
+        if(nome && numero) {
+            html += `<a href="https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}" target="_blank" class="botao-zap">${nome}</a>`;
+        }
+    });
+    document.getElementById('botoes').innerHTML = html;
+    
+} else {
+    // Modo proprietario
+    add();
+    add();
+}
+
+function add() {
+    let div = document.createElement('div');
+    div.className = 'contato';
+    div.innerHTML = `
+        <input placeholder="Nome" class="nome" maxlength="15">
+        <input placeholder="WhatsApp DDD" class="numero" maxlength="13">
+        <button class="btn-del" onclick="this.parentElement.remove()">🗑️</button>
+    `;
+    document.getElementById('lista').appendChild(div);
+    
+    div.querySelector('.numero').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+}
+
+function gerar() {
+    let contatos = [];
+    document.querySelectorAll('.contato').forEach(row => {
+        let nome = row.querySelector('.nome').value.trim();
+        let num = row.querySelector('.numero').value.trim();
+        
+        if(nome && num) {
+            num = num.replace(/\D/g, '');
+            if(num.length >= 10) {
+                if(!num.startsWith('55')) num = '55' + num;
+                // Formato seguro: NOME-NUMERO
+                contatos.push(nome + '-' + num);
+            }
+        }
+    });
+    
+    if(contatos.length === 0) {
+        alert('Preencha pelo menos um contato');
+        return;
+    }
+    
+    let msg = document.getElementById('msg').value.trim() || 'Ola estou na porta';
+    
+    // Formato super simples: NOME-NUMERO_NOME-NUMERO__mensagem
+    let url = location.href.split('#')[0] + '#' + contatos.join('_') + '__' + encodeURIComponent(msg);
+    
+    // Gera QR
+    document.getElementById('codigo').innerHTML = '';
+    new QRCode(document.getElementById('codigo'), {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: "#075e54",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    document.getElementById('qrcode').classList.add('show');
+    document.getElementById('link-teste').href = url;
+}
+</script>
+
+</body>
+</html>

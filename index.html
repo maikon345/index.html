@@ -3,143 +3,1059 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interfone Virtual</title>
+    <title>Interfone Virtual WhatsApp</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #25d366 0%, #128C7E 100%); min-height: 100vh; margin: 0; padding: 20px; }
-        .box { max-width: 400px; margin: 0 auto; background: white; border-radius: 15px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        h1 { color: #075e54; text-align: center; font-size: 1.5rem; margin-bottom: 20px; }
-        .contato { display: grid; grid-template-columns: 1fr 1fr auto; gap: 5px; margin-bottom: 10px; }
-        input { padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 1rem; }
-        button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; }
-        .btn-del { background: #ff4444; color: white; }
-        .btn-add { background: #666; color: white; width: 100%; margin: 10px 0; padding: 12px; }
-        .btn-gerar { background: #25d366; color: white; width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; }
-        #qrcode { text-align: center; margin-top: 20px; display: none; }
-        #qrcode.show { display: block; }
-        .visitante { display: none; }
-        .visitante.show { display: block; }
-        .botao-zap { display: block; padding: 15px; margin: 10px 0; background: #25d366; color: white; text-decoration: none; border-radius: 10px; text-align: center; font-weight: bold; }
-        .msg { background: #dcf8c6; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { background: #f0f2f5; min-height: 100vh; }
+        
+        /* Header */
+        .header { 
+            background: linear-gradient(135deg, #075e54 0%, #128C7E 100%); 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 0.9rem; }
+        
+        /* Container */
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+        
+        /* Tabs */
+        .tabs { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            background: white; 
+            padding: 10px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        .tab { 
+            flex: 1; 
+            padding: 12px; 
+            border: none; 
+            background: transparent; 
+            cursor: pointer; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            color: #666; 
+            transition: all 0.3s;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+        .tab.active { background: #25d366; color: white; }
+        
+        /* Sections */
+        .section { display: none; animation: fadeIn 0.3s; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Cards */
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); 
+            margin-bottom: 20px; 
+        }
+        .card-title { 
+            font-size: 1.2rem; 
+            color: #333; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-weight: 600;
+        }
+        
+        /* Forms */
+        .form-group { margin-bottom: 20px; }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #555; 
+            font-size: 0.95rem; 
+        }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e1e4e8; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #25d366; }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .btn { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            transition: all 0.3s; 
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 8px; 
+        }
+        .btn-primary { background: #25d366; color: white; width: 100%; }
+        .btn-primary:hover { background: #128C7E; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,211,102,0.3); }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-success { background: #28a745; color: white; }
+        
+        /* PLACA FÍSICA 10x15cm */
+        .placa-wrapper { 
+            margin-bottom: 30px; 
+            page-break-inside: avoid;
+            display: inline-block;
+            margin-right: 20px;
+        }
+        
+        .placa-fisica {
+            width: 10cm;
+            height: 15cm;
+            background: white;
+            border: 2px solid #25d366;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .placa-header {
+            background: linear-gradient(135deg, #25d366 0%, #128C7E 100%);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            position: relative;
+        }
+        .placa-icon { font-size: 24px; margin-bottom: 5px; }
+        .placa-titulo { font-size: 16px; font-weight: bold; letter-spacing: 1px; }
+        .placa-subtitulo { font-size: 11px; opacity: 0.95; margin-top: 3px; }
+        .placa-id {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            font-size: 8px;
+            color: rgba(255,255,255,0.7);
+            font-family: monospace;
+        }
+        
+        .placa-qr-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        .qr-container {
+            width: 5cm;
+            height: 5cm;
+            background: white;
+            border: 3px solid #25d366;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .qr-corner {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 3px solid #25d366;
+        }
+        .qr-corner.tl { top: -3px; left: -3px; border-right: none; border-bottom: none; }
+        .qr-corner.tr { top: -3px; right: -3px; border-left: none; border-bottom: none; }
+        .qr-corner.bl { bottom: -3px; left: -3px; border-right: none; border-top: none; }
+        .qr-corner.br { bottom: -3px; right: -3px; border-left: none; border-top: none; }
+        .qr-code-img img, .qr-code-img canvas { width: 4cm !important; height: 4cm !important; }
+        .qr-label { margin-top: 8px; font-size: 10px; color: #666; text-align: center; line-height: 1.4; }
+        
+        .placa-features {
+            display: flex;
+            padding: 8px;
+            background: #e8f5e9;
+            border-top: 1px solid #c8e6c9;
+            border-bottom: 1px solid #c8e6c9;
+        }
+        .feature { flex: 1; text-align: center; padding: 5px; border-right: 1px solid #c8e6c9; }
+        .feature:last-child { border-right: none; }
+        .feature-icon { font-size: 14px; margin-bottom: 2px; }
+        .feature-title { font-size: 8px; font-weight: bold; color: #2e7d32; display: block; }
+        .feature-desc { font-size: 7px; color: #555; }
+        
+        .placa-como-usar {
+            padding: 10px;
+            background: #fff3e0;
+            border-bottom: 1px solid #ffe0b2;
+        }
+        .como-usar-titulo { font-size: 11px; font-weight: bold; color: #e65100; margin-bottom: 6px; text-align: center; }
+        .passo { font-size: 9px; color: #333; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+        .passo-numero {
+            background: #ff9800;
+            color: white;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .placa-seguranca {
+            padding: 8px;
+            background: #fff8e1;
+            text-align: center;
+            font-size: 8px;
+            color: #5d4037;
+            line-height: 1.3;
+        }
+        .placa-footer {
+            background: #004d40;
+            color: white;
+            text-align: center;
+            padding: 6px;
+            font-size: 8px;
+        }
+        
+        /* Grid de Placas */
+        .placas-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+            gap: 30px; 
+            margin-top: 30px;
+            justify-items: center;
+        }
+        
+        /* Modo Visitante - Lista de Contatos */
+        .contato-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: white;
+            border: 2px solid #25d366;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .contato-card:hover { 
+            background: #f0f9f4; 
+            transform: translateX(5px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .avatar { 
+            width: 50px; 
+            height: 50px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-weight: bold; 
+            font-size: 1.2rem; 
+            flex-shrink: 0;
+        }
+        .contato-info { flex: 1; }
+        .contato-nome { font-weight: 700; color: #075e54; font-size: 1.1rem; }
+        .contato-numero { color: #666; font-size: 0.9rem; }
+        .wa-icon { 
+            width: 40px; 
+            height: 40px; 
+            background: #25d366; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        /* Tabela Admin */
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e1e4e8; }
+        th { background: #f8f9fa; font-weight: 600; color: #555; font-size: 0.9rem; }
+        tr:hover { background: #f8f9fa; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-virgem { background: #e2e3e5; color: #383d41; }
+        
+        /* Layout Responsivo */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 768px) { 
+            .form-row { grid-template-columns: 1fr; } 
+            .placas-grid { grid-template-columns: 1fr; }
+            .placa-fisica { transform: scale(0.8); transform-origin: top center; }
+        }
+        
+        /* Print Styles */
+        @media print {
+            @page { size: 10cm 15cm; margin: 0; }
+            body { background: white; padding: 0; }
+            .no-print { display: none !important; }
+            .placa-wrapper { margin: 0; page-break-inside: avoid; }
+            .placa-fisica { 
+                transform: none; 
+                margin: 0; 
+                box-shadow: none;
+                page-break-after: always;
+                width: 10cm;
+                height: 15cm;
+            }
+        }
+        
+        /* Utilitários */
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
+        .info-box { background: #e7f3ff; border-left: 4px solid #0066cc; padding: 15px; margin-bottom: 20px; border-radius: 5px; font-size: 0.9rem; color: #004085; }
+        .success-box { background: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 5px; color: #155724; }
+        .warning-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 5px; color: #856404; }
+        
+        .hidden { display: none !important; }
+        
+        .acoes-placa {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .contato-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 10px; align-items: center; }
+        .btn-del { width: 36px; height: 36px; background: #dc3545; color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
+        .btn-add { width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; margin: 15px 0; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="box" id="tela1">
-    <h1>📱 Configurar Interfone</h1>
-    
-    <div id="lista"></div>
-    
-    <button class="btn-add" onclick="add()">➕ Adicionar Contato</button>
-    
-    <div style="margin-bottom: 15px;">
-        <label>Mensagem:</label>
-        <input type="text" id="msg" value="Ola estou na porta" style="width: 100%; margin-top: 5px;">
+<!-- MODO ADMIN (Painel de Controle) -->
+<div id="modoAdmin" class="hidden">
+    <div class="header no-print">
+        <h1>🏢 Painel Administrativo</h1>
+        <p>Gerencie placas e contatos do Interfone Virtual</p>
     </div>
     
-    <button class="btn-gerar" onclick="gerar()">📷 Gerar QR Code</button>
-    
-    <div id="qrcode">
-        <div style="background: white; padding: 20px; display: inline-block; border: 3px solid #25d366; border-radius: 10px; margin-top: 15px;">
-            <div id="codigo"></div>
+    <div class="container no-print">
+        <!-- Abas -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('gerar')">🎨 Gerar Placas</button>
+            <button class="tab" onclick="switchTab('placas')">📋 Minhas Placas</button>
+            <button class="tab" onclick="switchTab('gerenciar')">👥 Gerenciar Contatos</button>
         </div>
-        <p style="color: #075e54; margin-top: 10px; font-weight: bold;">Aponte a camera do celular</p>
-        <a href="#" id="link-teste" target="_blank" style="color: #128C7E; display: block; margin-top: 10px;">👆 Testar aqui primeiro</a>
+
+        <!-- ETAPA 1: GERAR PLACAS VIRGENS -->
+        <div id="tab-gerar" class="section active">
+            <div class="card">
+                <div class="card-title">🎯 Gerador de Placas QR (Virgens)</div>
+                
+                <div class="info-box">
+                    <strong>💡 O que é "Placa Virgem"?</strong><br>
+                    É uma placa com QR Code único que ainda não tem contatos vinculados. 
+                    Quando alguém escanear pela primeira vez, poderá cadastrar os contatos, 
+                    ou você pode pré-cadastrar aqui no painel.
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Identificação do Local</label>
+                        <input type="text" id="nomeLocal" placeholder="Ex: Apartamento 101, Casa dos Silva...">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="tipoLocal">
+                            <option value="residencial">🏠 Residencial</option>
+                            <option value="comercial">🏢 Comercial</option>
+                            <option value="condominio">🏘️ Condomínio</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantidade de Placas</label>
+                        <input type="number" id="quantidade" min="1" max="20" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Mensagem Padrão (opcional)</label>
+                        <input type="text" id="mensagemPadrao" placeholder="Olá! Estou na porta/interfone." value="Ola! Estou na porta/interfone.">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="gerarPlacasVirgens()">
+                    🚀 Gerar Placas QR Virgens
+                </button>
+            </div>
+
+            <!-- Preview das Placas Geradas -->
+            <div id="previewGeracao" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" class="no-print">
+                    <h3>📦 Placas Geradas (Prontas para Imprimir)</h3>
+                    <button class="btn btn-secondary" onclick="window.print()" style="width: auto;">
+                        🖨️ Imprimir Todas
+                    </button>
+                </div>
+                <div id="areaPlacas" class="placas-grid"></div>
+            </div>
+        </div>
+
+        <!-- LISTA DE PLACAS -->
+        <div id="tab-placas" class="section">
+            <div class="card">
+                <div class="card-title" style="justify-content: space-between;">
+                    <span>📋 Placas Cadastradas</span>
+                    <button class="btn btn-danger" onclick="limparTodasPlacas()" style="width: auto; font-size: 0.9rem;">
+                        🗑️ Limpar Tudo
+                    </button>
+                </div>
+                
+                <div class="table-container" id="listaPlacasContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID da Placa</th>
+                                <th>Local</th>
+                                <th>Tipo</th>
+                                <th>Contatos</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPlacas"></tbody>
+                    </table>
+                </div>
+                
+                <div id="emptyPlacas" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📭</div>
+                    <h3>Nenhuma placa criada</h3>
+                    <p>Gere sua primeira placa virgem na aba "Gerar Placas"</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- GERENCIAR CONTATOS -->
+        <div id="tab-gerenciar" class="section">
+            <div class="card">
+                <div class="card-title">👥 Cadastrar Contatos em Placas</div>
+                
+                <div class="form-group">
+                    <label>Selecione a Placa</label>
+                    <select id="selectPlacaCadastro" onchange="carregarContatosPlaca()">
+                        <option value="">-- Escolha uma placa --</option>
+                    </select>
+                </div>
+
+                <div id="areaCadastroContatos" style="display: none;">
+                    <div class="form-group">
+                        <label>Contatos desta Placa:</label>
+                        <div id="listaContatosAdmin"></div>
+                        <button class="btn-add" onclick="adicionarContatoAdmin()">➕ Adicionar Contato</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mensagem Padrão para Visitantes</label>
+                        <input type="text" id="msgPlacaAdmin" placeholder="Mensagem que aparecerá para quem escanear">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="salvarContatosPlaca()">
+                        💾 Salvar Configurações
+                    </button>
+                </div>
+
+                <div id="semPlacasMsg" class="warning-box" style="margin-top: 20px;">
+                    ⚠️ Você precisa primeiro gerar uma placa na aba "Gerar Placas"
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="box visitante" id="tela2">
-    <h1>📡 Enviar Mensagem</h1>
-    <div class="msg" id="texto-msg"></div>
-    <div id="botoes"></div>
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="#" onclick="location.href=location.pathname" style="color: #666; font-size: 0.9rem;">Criar meu QR Code</a>
+<!-- MODO VISITANTE (Escaneou QR Code) -->
+<div id="modoVisitante" class="hidden">
+    <div class="header">
+        <h1>📱 Interfone Virtual</h1>
+        <p id="subtituloVisitante">Escaneie para conectar via WhatsApp</p>
+    </div>
+    
+    <div class="container" style="max-width: 600px;">
+        
+        <!-- ETAPA 2: CADASTRO (Placa Virgem) -->
+        <div id="etapa2Cadastro" class="hidden">
+            <div class="card">
+                <div class="warning-box">
+                    <strong>🔰 Placa Nova Detectada!</strong><br>
+                    Esta placa ainda não tem contatos configurados. 
+                    Você é o responsável por este local? Cadastre os contatos abaixo:
+                </div>
+
+                <div class="card-title">📝 Configurar Contatos</div>
+                
+                <div class="form-group">
+                    <label>Nome do Local</label>
+                    <input type="text" id="cadLocalNome" placeholder="Ex: Apartamento 101">
+                </div>
+
+                <div id="contatosCadastroLista">
+                    <div class="contato-row">
+                        <input type="text" placeholder="Nome" class="cad-nome">
+                        <input type="tel" placeholder="WhatsApp (com DDD)" class="cad-telefone" maxlength="13">
+                        <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+                    </div>
+                </div>
+                
+                <button class="btn-add" onclick="adicionarLinhaCadastro()">➕ Adicionar outro contato</button>
+
+                <div class="form-group">
+                    <label>Mensagem para Visitantes</label>
+                    <input type="text" id="cadMensagem" value="Ola! Estou na porta/interfone.">
+                </div>
+
+                <button class="btn btn-primary" onclick="ativarPlaca()" style="margin-top: 20px;">
+                    ✅ Ativar Interfone
+                </button>
+            </div>
+        </div>
+
+        <!-- ETAPA 3: USO (Já tem contatos) -->
+        <div id="etapa3Uso" class="hidden">
+            <div class="success-box" id="mensagemBoasVindas">
+                Selecione um contato para enviar mensagem via WhatsApp:
+            </div>
+
+            <div id="listaContatosVisitante"></div>
+
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background: white; border-radius: 10px;">
+                <p style="color: #666; margin-bottom: 10px;">Quer criar sua própria placa?</p>
+                <a href="#" onclick="window.location.href = window.location.pathname" class="btn btn-secondary" style="text-decoration: none; display: inline-block;">
+                    🏠 Criar meu Interfone Virtual
+                </a>
+            </div>
+        </div>
+
+        <!-- ERRO: Placa não encontrada -->
+        <div id="placaNaoEncontrada" class="hidden">
+            <div class="empty-state">
+                <div class="empty-state-icon">❌</div>
+                <h3>Placa não encontrada</h3>
+                <p>Este QR Code parece ser inválido ou a placa foi removida.</p>
+                <a href="#" onclick="window.location.href = window.location.pathname" class="btn btn-primary" style="margin-top: 20px; text-decoration: none; display: inline-block;">
+                    Criar Nova Placa
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-// Abre com hash? Modo visitante
-if(location.hash && location.hash.length > 3) {
-    document.getElementById('tela1').style.display = 'none';
-    document.getElementById('tela2').classList.add('show');
+// ============ SISTEMA DE DADOS ============
+const DB = {
+    getPlacas: () => JSON.parse(localStorage.getItem('interfone_placas') || '[]'),
+    setPlacas: (placas) => localStorage.setItem('interfone_placas', JSON.stringify(placas)),
+    getPlaca: (id) => DB.getPlacas().find(p => p.id === id),
+    savePlaca: (placa) => {
+        const placas = DB.getPlacas();
+        const index = placas.findIndex(p => p.id === placa.id);
+        if (index >= 0) placas[index] = placa;
+        else placas.push(placa);
+        DB.setPlacas(placas);
+    },
+    deletePlaca: (id) => {
+        DB.setPlacas(DB.getPlacas().filter(p => p.id !== id));
+    }
+};
+
+// ============ INICIALIZAÇÃO ============
+window.onload = function() {
+    const params = new URLSearchParams(window.location.search);
+    const placaId = params.get('placa');
     
-    // Decodifica
-    let dados = location.hash.substring(1);
-    let partes = dados.split('__');
-    let contatos = partes[0].split('_');
-    let mensagem = partes[1] ? decodeURIComponent(partes[1]) : 'Ola estou na porta';
-    
-    document.getElementById('texto-msg').textContent = mensagem;
-    
-    let html = '';
-    contatos.forEach(c => {
-        let [nome, numero] = c.split('-');
-        if(nome && numero) {
-            html += `<a href="https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}" target="_blank" class="botao-zap">${nome}</a>`;
-        }
-    });
-    document.getElementById('botoes').innerHTML = html;
-    
-} else {
-    // Modo proprietario
-    add();
-    add();
+    if (placaId) {
+        // Modo Visitante (Etapas 2 ou 3)
+        document.getElementById('modoAdmin').classList.add('hidden');
+        document.getElementById('modoVisitante').classList.remove('hidden');
+        carregarModoVisitante(placaId);
+    } else {
+        // Modo Admin (Etapa 1)
+        document.getElementById('modoAdmin').classList.remove('hidden');
+        document.getElementById('modoVisitante').classList.add('hidden');
+        atualizarSelectPlacas();
+        renderizarTabelaPlacas();
+    }
+};
+
+// ============ ETAPA 1: GERAR PLACAS VIRGENS ============
+function gerarIdUnico() {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+    return `VIRGEM-${timestamp}-${random}`;
 }
 
-function add() {
-    let div = document.createElement('div');
-    div.className = 'contato';
-    div.innerHTML = `
-        <input placeholder="Nome" class="nome" maxlength="15">
-        <input placeholder="WhatsApp DDD" class="numero" maxlength="13">
-        <button class="btn-del" onclick="this.parentElement.remove()">🗑️</button>
-    `;
-    document.getElementById('lista').appendChild(div);
+function gerarPlacasVirgens() {
+    const nomeLocal = document.getElementById('nomeLocal').value || 'Interfone Virtual';
+    const tipo = document.getElementById('tipoLocal').value;
+    const qtd = parseInt(document.getElementById('quantidade').value) || 1;
+    const mensagemPadrao = document.getElementById('mensagemPadrao').value || 'Ola! Estou na porta/interfone.';
     
-    div.querySelector('.numero').addEventListener('input', function(e) {
+    const container = document.getElementById('areaPlacas');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < qtd; i++) {
+        const idPlaca = gerarIdUnico();
+        const urlPlaca = `${window.location.origin}${window.location.pathname}?placa=${idPlaca}`;
+        
+        // Salva no banco como "virgem" (sem contatos)
+        DB.savePlaca({
+            id: idPlaca,
+            nomeLocal: nomeLocal,
+            tipo: tipo,
+            contatos: [],
+            mensagem: mensagemPadrao,
+            dataCriacao: new Date().toLocaleString('pt-BR'),
+            virgem: true
+        });
+        
+        // Cria visual da placa física
+        const wrapper = document.createElement('div');
+        wrapper.className = 'placa-wrapper';
+        wrapper.innerHTML = `
+            <div class="placa-fisica">
+                <div class="placa-header">
+                    <div class="placa-icon">📱</div>
+                    <div class="placa-titulo">INTERFONE VIRTUAL</div>
+                    <div class="placa-subtitulo">Toque para chamar via WhatsApp</div>
+                    <div class="placa-id">${idPlaca}</div>
+                </div>
+                
+                <div class="placa-qr-area">
+                    <div class="qr-container">
+                        <div class="qr-corner tl"></div>
+                        <div class="qr-corner tr"></div>
+                        <div class="qr-corner bl"></div>
+                        <div class="qr-corner br"></div>
+                        <div class="qr-code-img" id="qr-${idPlaca}"></div>
+                    </div>
+                    <div class="qr-label">
+                        <strong>${nomeLocal}</strong><br>
+                        <small style="color: #999; font-size: 8px;">${idPlaca}</small>
+                    </div>
+                </div>
+                
+                <div class="placa-features">
+                    <div class="feature">
+                        <div class="feature-icon">📷</div>
+                        <span class="feature-title">QR Code funcional</span>
+                        <span class="feature-desc">Qualquer pessoa usa</span>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">👥</div>
+                        <span class="feature-title">Múltiplos contatos</span>
+                        <span class="feature-desc">Escolha quem chamar</span>
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">💬</div>
+                        <span class="feature-title">Direto WhatsApp</span>
+                        <span class="feature-desc">Sem salvar número</span>
+                    </div>
+                </div>
+                
+                <div class="placa-como-usar">
+                    <div class="como-usar-titulo">📋 COMO USAR:</div>
+                    <div class="passo">
+                        <span class="passo-numero">1</span>
+                        <span>Abra a câmera do celular</span>
+                    </div>
+                    <div class="passo">
+                        <span class="passo-numero">2</span>
+                        <span>Aponte para o QR Code</span>
+                    </div>
+                    <div class="passo">
+                        <span class="passo-numero">3</span>
+                        <span>Toque no link</span>
+                    </div>
+                    <div class="passo">
+                        <span class="passo-numero">4</span>
+                        <span>Escolha o contato!</span>
+                    </div>
+                </div>
+                
+                <div class="placa-seguranca">
+                    <strong>🔒 Sistema Seguro</strong><br>
+                    ${tipo === 'residencial' ? '🏠 Residencial' : tipo === 'comercial' ? '🏢 Comercial' : '🏘️ Condomínio'}<br>
+                    <span style="color: #999;">Não precisa salvar contato</span>
+                </div>
+                
+                <div class="placa-footer">
+                    🔊 Interfone Virtual - Sistema Multi-Contatos
+                </div>
+            </div>
+            
+            <div class="acoes-placa no-print">
+                <button class="btn btn-secondary btn-small" onclick="imprimirPlaca('${idPlaca}')">🖨️ Imprimir</button>
+                <button class="btn btn-success btn-small" onclick="copiarLinkPlaca('${urlPlaca}')">📋 Copiar Link</button>
+            </div>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #666; word-break: break-all;" class="no-print">
+                ${urlPlaca}
+            </div>
+        `;
+        
+        container.appendChild(wrapper);
+        
+        // Gera QR Code
+        setTimeout(() => {
+            new QRCode(document.getElementById(`qr-${idPlaca}`), {
+                text: urlPlaca,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }, 100);
+    }
+    
+    document.getElementById('previewGeracao').style.display = 'block';
+    setTimeout(() => {
+        document.getElementById('previewGeracao').scrollIntoView({behavior: 'smooth'});
+    }, 200);
+    
+    // Atualiza selects e tabela
+    atualizarSelectPlacas();
+    renderizarTabelaPlacas();
+}
+
+function imprimirPlaca(idPlaca) {
+    const placa = document.querySelector(`#qr-${idPlaca}`).closest('.placa-fisica').outerHTML;
+    const janela = window.open('', '_blank');
+    janela.document.write(`
+        <html>
+        <head>
+            <title>Placa ${idPlaca}</title>
+            <style>
+                @page { size: 10cm 15cm; margin: 0; }
+                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5; }
+                ${document.querySelector('style').innerHTML}
+            </style>
+        </head>
+        <body>
+            ${placa}
+            <script>
+                setTimeout(() => window.print(), 500);
+            <\/script>
+        </body>
+        </html>
+    `);
+    janela.document.close();
+}
+
+function copiarLinkPlaca(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert('📋 Link copiado!\n\n' + url);
+    });
+}
+
+// ============ ETAPA 2 & 3: MODO VISITANTE ============
+function carregarModoVisitante(placaId) {
+    const placa = DB.getPlaca(placaId);
+    
+    if (!placa) {
+        document.getElementById('etapa2Cadastro').classList.add('hidden');
+        document.getElementById('etapa3Uso').classList.add('hidden');
+        document.getElementById('placaNaoEncontrada').classList.remove('hidden');
+        return;
+    }
+    
+    document.getElementById('subtituloVisitante').textContent = placa.nomeLocal || 'Interfone Virtual';
+    
+    if (placa.virgem || placa.contatos.length === 0) {
+        // ETAPA 2: Mostrar formulário de cadastro
+        document.getElementById('etapa2Cadastro').classList.remove('hidden');
+        document.getElementById('etapa3Uso').classList.add('hidden');
+        document.getElementById('cadLocalNome').value = placa.nomeLocal || '';
+        document.getElementById('cadMensagem').value = placa.mensagem || 'Ola! Estou na porta/interfone.';
+    } else {
+        // ETAPA 3: Mostrar lista de contatos
+        document.getElementById('etapa2Cadastro').classList.add('hidden');
+        document.getElementById('etapa3Uso').classList.remove('hidden');
+        renderizarContatosUso(placa);
+    }
+}
+
+function adicionarLinhaCadastro() {
+    const div = document.createElement('div');
+    div.className = 'contato-row';
+    div.innerHTML = `
+        <input type="text" placeholder="Nome" class="cad-nome">
+        <input type="tel" placeholder="WhatsApp (com DDD)" class="cad-telefone" maxlength="13">
+        <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+    `;
+    document.getElementById('contatosCadastroLista').appendChild(div);
+    
+    // Máscara
+    div.querySelector('.cad-telefone').addEventListener('input', function(e) {
         e.target.value = e.target.value.replace(/\D/g, '');
     });
 }
 
-function gerar() {
-    let contatos = [];
-    document.querySelectorAll('.contato').forEach(row => {
-        let nome = row.querySelector('.nome').value.trim();
-        let num = row.querySelector('.numero').value.trim();
-        
-        if(nome && num) {
-            num = num.replace(/\D/g, '');
-            if(num.length >= 10) {
-                if(!num.startsWith('55')) num = '55' + num;
-                // Formato seguro: NOME-NUMERO
-                contatos.push(nome + '-' + num);
-            }
-        }
-    });
+function ativarPlaca() {
+    const params = new URLSearchParams(window.location.search);
+    const placaId = params.get('placa');
+    const placa = DB.getPlaca(placaId);
     
-    if(contatos.length === 0) {
-        alert('Preencha pelo menos um contato');
+    const nomes = document.querySelectorAll('.cad-nome');
+    const telefones = document.querySelectorAll('.cad-telefone');
+    const contatos = [];
+    
+    for (let i = 0; i < nomes.length; i++) {
+        if (nomes[i].value && telefones[i].value) {
+            let tel = telefones[i].value.replace(/\D/g, '');
+            if (!tel.startsWith('55')) tel = '55' + tel;
+            contatos.push({
+                nome: nomes[i].value,
+                telefone: tel
+            });
+        }
+    }
+    
+    if (contatos.length === 0) {
+        alert('⚠️ Adicione pelo menos um contato!');
         return;
     }
     
-    let msg = document.getElementById('msg').value.trim() || 'Ola estou na porta';
+    placa.contatos = contatos;
+    placa.mensagem = document.getElementById('cadMensagem').value;
+    placa.nomeLocal = document.getElementById('cadLocalNome').value || placa.nomeLocal;
+    placa.virgem = false;
     
-    // Formato super simples: NOME-NUMERO_NOME-NUMERO__mensagem
-    let url = location.href.split('#')[0] + '#' + contatos.join('_') + '__' + encodeURIComponent(msg);
+    DB.savePlaca(placa);
     
-    // Gera QR
-    document.getElementById('codigo').innerHTML = '';
-    new QRCode(document.getElementById('codigo'), {
-        text: url,
-        width: 200,
-        height: 200,
-        colorDark: "#075e54",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+    // Esconde cadastro e mostra uso
+    document.getElementById('etapa2Cadastro').classList.add('hidden');
+    document.getElementById('etapa3Uso').classList.remove('hidden');
+    renderizarContatosUso(placa);
+}
+
+function renderizarContatosUso(placa) {
+    const container = document.getElementById('listaContatosVisitante');
+    container.innerHTML = '';
+    
+    document.getElementById('mensagemBoasVindas').innerHTML = `
+        <strong>🏠 ${placa.nomeLocal}</strong><br>
+        Escaneie o QR Code e toque em um contato para enviar mensagem:<br>
+        <em>"${placa.mensagem || 'Ola! Estou na porta/interfone.'}"</em>
+    `;
+    
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+    
+    placa.contatos.forEach((contato, index) => {
+        const initial = contato.nome.charAt(0).toUpperCase();
+        const color = colors[index % colors.length];
+        const mensagem = encodeURIComponent(placa.mensagem || 'Ola! Estou na porta/interfone.');
+        const linkWhats = `https://wa.me/${contato.telefone}?text=${mensagem}`;
+        
+        const card = document.createElement('a');
+        card.className = 'contato-card';
+        card.href = linkWhats;
+        card.target = '_blank';
+        card.innerHTML = `
+            <div class="avatar" style="background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%);">${initial}</div>
+            <div class="contato-info">
+                <div class="contato-nome">${contato.nome}</div>
+                <div class="contato-numero">📱 ${contato.telefone}</div>
+            </div>
+            <div class="wa-icon">💬</div>
+        `;
+        container.appendChild(card);
     });
+}
+
+// ============ ADMIN: GESTÃO ============
+function switchTab(tab) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     
-    document.getElementById('qrcode').classList.add('show');
-    document.getElementById('link-teste').href = url;
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+    
+    if (tab === 'placas') renderizarTabelaPlacas();
+    if (tab === 'gerenciar') atualizarSelectPlacas();
+}
+
+function renderizarTabelaPlacas() {
+    const placas = DB.getPlacas();
+    const tbody = document.getElementById('tabelaPlacas');
+    const empty = document.getElementById('emptyPlacas');
+    const container = document.getElementById('listaPlacasContainer');
+    
+    if (placas.length === 0) {
+        container.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+    }
+    
+    container.style.display = 'block';
+    empty.style.display = 'none';
+    tbody.innerHTML = '';
+    
+    placas.reverse().forEach(placa => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><code style="background: #f4f4f4; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem;">${placa.id}</code></td>
+            <td>${placa.nomeLocal || '-'}</td>
+            <td>${placa.tipo === 'residencial' ? '🏠' : placa.tipo === 'comercial' ? '🏢' : '🏘️'} ${placa.tipo}</td>
+            <td>${placa.contatos ? placa.contatos.length : 0} contato(s)</td>
+            <td><span class="badge ${placa.virgem || placa.contatos.length === 0 ? 'badge-virgem' : 'badge-success'}">
+                ${placa.virgem || placa.contatos.length === 0 ? '🔰 Virgem' : '✅ Ativo'}
+            </span></td>
+            <td>
+                <button class="btn btn-secondary" onclick="verPlaca('${placa.id}')" style="padding: 6px 12px; font-size: 0.85rem;">👁️ Ver</button>
+                <button class="btn btn-danger" onclick="excluirPlaca('${placa.id}')" style="padding: 6px 12px; font-size: 0.85rem; margin-left: 5px;">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function atualizarSelectPlacas() {
+    const select = document.getElementById('selectPlacaCadastro');
+    const placas = DB.getPlacas();
+    
+    if (placas.length === 0) {
+        document.getElementById('semPlacasMsg').style.display = 'block';
+        document.getElementById('areaCadastroContatos').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('semPlacasMsg').style.display = 'none';
+    select.innerHTML = '<option value="">-- Escolha uma placa --</option>';
+    
+    placas.forEach(placa => {
+        const option = document.createElement('option');
+        option.value = placa.id;
+        option.textContent = `${placa.nomeLocal || 'Sem nome'} (${placa.id})`;
+        select.appendChild(option);
+    });
+}
+
+function carregarContatosPlaca() {
+    const id = document.getElementById('selectPlacaCadastro').value;
+    if (!id) {
+        document.getElementById('areaCadastroContatos').style.display = 'none';
+        return;
+    }
+    
+    const placa = DB.getPlaca(id);
+    const container = document.getElementById('listaContatosAdmin');
+    container.innerHTML = '';
+    
+    if (placa.contatos && placa.contatos.length > 0) {
+        placa.contatos.forEach((c, i) => {
+            const row = document.createElement('div');
+            row.className = 'contato-row';
+            row.innerHTML = `
+                <input type="text" value="${c.nome}" class="admin-nome" placeholder="Nome">
+                <input type="tel" value="${c.telefone}" class="admin-telefone" placeholder="WhatsApp" maxlength="13">
+                <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+            `;
+            container.appendChild(row);
+        });
+    } else {
+        // Adiciona um vazio
+        adicionarContatoAdmin();
+    }
+    
+    document.getElementById('msgPlacaAdmin').value = placa.mensagem || '';
+    document.getElementById('areaCadastroContatos').style.display = 'block';
+}
+
+function adicionarContatoAdmin() {
+    const div = document.createElement('div');
+    div.className = 'contato-row';
+    div.innerHTML = `
+        <input type="text" placeholder="Nome" class="admin-nome">
+        <input type="tel" placeholder="WhatsApp (com DDD)" class="admin-telefone" maxlength="13">
+        <button class="btn-del" onclick="this.parentElement.remove()">×</button>
+    `;
+    document.getElementById('listaContatosAdmin').appendChild(div);
+    
+    div.querySelector('.admin-telefone').addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+}
+
+function salvarContatosPlaca() {
+    const id = document.getElementById('selectPlacaCadastro').value;
+    const placa = DB.getPlaca(id);
+    
+    const nomes = document.querySelectorAll('.admin-nome');
+    const telefones = document.querySelectorAll('.admin-telefone');
+    const contatos = [];
+    
+    for (let i = 0; i < nomes.length; i++) {
+        if (nomes[i].value && telefones[i].value) {
+            let tel = telefones[i].value.replace(/\D/g, '');
+            if (!tel.startsWith('55')) tel = '55' + tel;
+            contatos.push({
+                nome: nomes[i].value,
+                telefone: tel
+            });
+        }
+    }
+    
+    placa.contatos = contatos;
+    placa.mensagem = document.getElementById('msgPlacaAdmin').value;
+    placa.virgem = contatos.length === 0;
+    
+    DB.savePlaca(placa);
+    alert(`✅ ${contatos.length} contato(s) salvo(s) na placa ${id}`);
+    renderizarTabelaPlacas();
+}
+
+function verPlaca(id) {
+    const placa = DB.getPlaca(id);
+    const url = `${window.location.origin}${window.location.pathname}?placa=${id}`;
+    alert(`📋 Detalhes da Placa:\n\nID: ${placa.id}\nLocal: ${placa.nomeLocal}\nTipo: ${placa.tipo}\nContatos: ${placa.contatos ? placa.contatos.length : 0}\nStatus: ${placa.virgem ? 'Virgem' : 'Ativo'}\n\n🔗 URL:\n${url}`);
+}
+
+function excluirPlaca(id) {
+    if (confirm(`Tem certeza que deseja excluir a placa ${id}?`)) {
+        DB.deletePlaca(id);
+        renderizarTabelaPlacas();
+        atualizarSelectPlacas();
+    }
+}
+
+function limparTodasPlacas() {
+    if (confirm('⚠️ ATENÇÃO: Isso apagará TODAS as placas permanentemente!\n\nDeseja continuar?')) {
+        localStorage.removeItem('interfone_placas');
+        renderizarTabelaPlacas();
+        atualizarSelectPlacas();
+    }
 }
 </script>
 

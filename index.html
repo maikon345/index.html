@@ -726,14 +726,19 @@ function baixarPDFVerde() {
     gerarPDF(placaAtual, false);
 }
 
-// GERAÇÃO DE PDF CORRIGIDA - NÃO CORTAR
+// GERAÇÃO DE PDF CORRIGIDA - COM MARGENS E QR 10CM EXATOS
 async function gerarPDF(dados, isVirgem) {
     const { jsPDF } = window.jspdf;
+    
+    // Configuração: 100mm x 150mm (10cm x 15cm)
+    const pageWidth = 100;
+    const pageHeight = 150;
+    const margin = 5; // margem de 5mm em cada lado
     
     const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: [100, 150], // 10cm x 15cm
+        format: [pageWidth, pageHeight],
         compress: false
     });
     
@@ -743,33 +748,40 @@ async function gerarPDF(dados, isVirgem) {
     const corFooter = isVirgem ? [230, 81, 0] : [0, 77, 64];
     const corTextoBox = isVirgem ? [133, 100, 4] : [21, 87, 36];
     
-    // 1. HEADER (18mm altura) - Título em negrito
+    // Dimensões calculadas com margens
+    const headerHeight = 18;
+    const qrSize = 100; // QR exatamente 10cm x 10cm
+    const qrY = headerHeight + 2; // 20mm do topo
+    const infoHeight = 22;
+    const infoY = qrY + qrSize + 2; // 122mm do topo (20 + 100 + 2)
+    const footerHeight = 8;
+    const footerY = pageHeight - footerHeight; // 142mm do topo
+    
+    // 1. HEADER (18mm altura)
     doc.setFillColor(...corHeader);
-    doc.rect(0, 0, 100, 18, 'F');
+    doc.rect(0, 0, pageWidth, headerHeight, 'F');
     
-    // Linha decorativa
+    // Linha decorativa inferior do header
     doc.setFillColor(...corHeaderDark);
-    doc.rect(0, 18, 100, 2, 'F');
+    doc.rect(0, headerHeight - 2, pageWidth, 2, 'F');
     
-    // Título centralizado, branco, negrito
+    // Título centralizado
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
-    doc.text("INTERFONE VIRTUAL", 50, 11, { align: "center" });
+    doc.text("INTERFONE VIRTUAL", pageWidth / 2, 11, { align: "center" });
     
-    // Subtítulo (só se necessário, menor)
-    doc.setFontSize(10);
-    doc.text(isVirgem ? "PLACA VIRGEM - ESCANEIE PARA ATIVAR" : "PLACA ATIVA - ESCANEIE PARA USAR", 50, 16, { align: "center" });
+    // Subtítulo
+    doc.setFontSize(9);
+    const subtitulo = isVirgem ? "PLACA VIRGEM - ESCANEIE PARA ATIVAR" : "PLACA ATIVA - PRONTA PARA USO";
+    doc.text(subtitulo, pageWidth / 2, 16, { align: "center" });
     
-    // 2. QR CODE - Área de 100mm x 100mm (10x10cm) - OCUPA TUDO
-    const qrY = 20; // Começa após header (18+2)
-    const qrSize = 100; // 10cm exatos
-    
-    // Fundo branco
+    // 2. QR CODE - Área de 100mm x 100mm (10cm x 10cm)
+    // Fundo branco com margem
     doc.setFillColor(255, 255, 255);
-    doc.rect(0, qrY, 100, qrSize, 'F');
+    doc.rect(0, qrY, pageWidth, qrSize, 'F');
     
-    // Gerar QR
+    // Gerar QR em canvas temporário
     const tempDiv = document.createElement('div');
     tempDiv.style.position = 'absolute';
     tempDiv.style.left = '-9999px';
@@ -783,7 +795,8 @@ async function gerarPDF(dados, isVirgem) {
         height: 1000,
         colorDark: "#000000",
         colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+        correctLevel: QRCode.CorrectLevel.H,
+        margin: 2 // margem interna do QR
     });
     
     await new Promise(resolve => setTimeout(resolve, 400));
@@ -792,59 +805,63 @@ async function gerarPDF(dados, isVirgem) {
     if (canvas) {
         const imgData = canvas.toDataURL('image/png', 1.0);
         
-        // INSERE QR OCUPANDO 100mm x 100mm - CENTRALIZADO POR DEFINIÇÃO (ocupa tudo)
-        // X=0, Y=qrY, largura=100, altura=100
+        // Insere QR em 100mm x 100mm exatos, posicionado em X=0, Y=20
+        // Mas vamos adicionar uma borda branca de 2mm ao redor visualmente
         doc.addImage(imgData, 'PNG', 0, qrY, qrSize, qrSize);
         
-        // Borda dupla (externa e interna) para destacar
+        // Borda externa do QR (margem visual)
         doc.setDrawColor(...corHeader);
-        doc.setLineWidth(1);
-        doc.rect(0, qrY, 100, 100); // Externa
         doc.setLineWidth(0.5);
-        doc.rect(3, qrY + 3, 94, 94); // Interna
+        doc.rect(0, qrY, qrSize, qrSize); // Borda externa exata
+        doc.setLineWidth(0.3);
+        doc.rect(2, qrY + 2, qrSize - 4, qrSize - 4); // Borda interna (margem de segurança)
     }
     document.body.removeChild(tempDiv);
     
-    // 3. INFORMAÇÕES (22mm altura) - entre QR (termina em 120) e Footer (começa em 142)
-    const infoY = 122;
-    
-    // Box colorido
+    // 3. SEÇÃO DE INFORMAÇÕES (22mm altura)
+    // Fundo colorido suave
     doc.setFillColor(isVirgem ? 255 : 212, isVirgem ? 243 : 237, isVirgem ? 205 : 218);
     doc.setDrawColor(...corHeader);
     doc.setLineWidth(0.5);
-    doc.roundedRect(5, infoY, 90, 18, 2, 2, 'FD');
+    doc.roundedRect(margin, infoY, pageWidth - (margin * 2), infoHeight - 2, 2, 2, 'FD');
     
+    // Texto informativo
     doc.setTextColor(...corTextoBox);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     
     if (isVirgem) {
-        doc.text("COMO ATIVAR:", 50, infoY + 5, { align: "center" });
+        doc.text("COMO ATIVAR:", pageWidth / 2, infoY + 5, { align: "center" });
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.text("1. Abra a camera do celular", 8, infoY + 10);
-        doc.text("2. Aponte para o QR Code ao lado", 8, infoY + 15);
-        doc.text("3. Toque no link e cadastre contatos", 8, infoY + 20);
+        doc.text("1. Abra a câmera do celular", margin + 3, infoY + 10);
+        doc.text("2. Aponte para o QR Code acima", margin + 3, infoY + 14);
+        doc.text("3. Toque no link e cadastre os contatos", margin + 3, infoY + 18);
     } else {
-        doc.text("COMO USAR:", 50, infoY + 5, { align: "center" });
+        doc.text("COMO USAR:", pageWidth / 2, infoY + 5, { align: "center" });
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
-        doc.text("1. Escaneie o QR Code acima", 8, infoY + 10);
-        doc.text("2. Escolha o contato desejado", 8, infoY + 14);
-        doc.text("3. Envie a mensagem automaticamente", 8, infoY + 18);
+        doc.text("1. Escaneie o QR Code acima", margin + 3, infoY + 10);
+        doc.text("2. Escolha o contato desejado", margin + 3, infoY + 14);
+        doc.text("3. Toque para enviar mensagem automaticamente", margin + 3, infoY + 18);
     }
     
-    // 4. FOOTER (8mm altura) - base 142 a 150
+    // 4. FOOTER (8mm altura)
     doc.setFillColor(...corFooter);
-    doc.rect(0, 142, 100, 8, 'F');
+    doc.rect(0, footerY, pageWidth, footerHeight, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    const txtFooter = isVirgem ? "ESCANEIE PARA ATIVAR" : "ESCANEIE PARA CHAMAR";
-    doc.text(txtFooter, 50, 147, { align: "center" });
+    const txtFooter = isVirgem ? "🔰 ESCANEIE PARA ATIVAR" : "✅ ESCANEIE PARA CHAMAR";
+    doc.text(txtFooter, pageWidth / 2, footerY + 5, { align: "center" });
     
-    // Salvar
+    // Linha divisória sutil acima do footer
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.3);
+    doc.line(margin, footerY, pageWidth - margin, footerY);
+    
+    // Salvar arquivo
     const nomeArquivo = isVirgem 
         ? `placa-virgem-${dados.id}.pdf` 
         : `placa-ativa-${dados.nome.replace(/\s+/g, '-').toLowerCase()}.pdf`;

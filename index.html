@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interfone Virtual WhatsApp</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
         body { background: #f0f2f5; min-height: 100vh; }
@@ -92,30 +94,36 @@
         .btn-primary:hover { background: #128C7E; transform: translateY(-2px); }
         .btn-secondary { background: #6c757d; color: white; }
         .btn-danger { background: #dc3545; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
         
-        /* PLACA FÍSICA 10x15cm */
+        /* PLACA FÍSICA PREVIEW */
+        .placa-preview-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
         .placa-fisica {
-            width: 10cm;
-            height: 15cm;
+            width: 300px; /* Preview em tela */
+            height: 450px;
             background: white;
             border: 2px solid #25d366;
             border-radius: 8px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            margin: 0 auto;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
         .placa-header {
             background: linear-gradient(135deg, #25d366 0%, #128C7E 100%);
             color: white;
-            padding: 12px;
+            padding: 15px;
             text-align: center;
         }
-        .placa-icon { font-size: 24px; margin-bottom: 5px; }
-        .placa-titulo { font-size: 16px; font-weight: bold; letter-spacing: 1px; }
-        .placa-subtitulo { font-size: 11px; opacity: 0.95; margin-top: 3px; }
+        .placa-icon { font-size: 32px; margin-bottom: 8px; }
+        .placa-titulo { font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+        .placa-subtitulo { font-size: 12px; opacity: 0.9; margin-top: 5px; }
         
         .placa-qr-area {
             flex: 1;
@@ -123,70 +131,34 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 15px;
+            padding: 10px;
             background: #f8f9fa;
         }
-        .qr-container {
-            width: 5cm;
-            height: 5cm;
+        
+        /* QR Code 10cm x 10cm proporcional */
+        .qr-container-grande {
+            width: 280px;
+            height: 280px;
             background: white;
             border: 3px solid #25d366;
-            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
         }
-        .qr-corner {
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            border: 3px solid #25d366;
-        }
-        .qr-corner.tl { top: -3px; left: -3px; border-right: none; border-bottom: none; }
-        .qr-corner.tr { top: -3px; right: -3px; border-left: none; border-bottom: none; }
-        .qr-corner.bl { bottom: -3px; left: -3px; border-right: none; border-top: none; }
-        .qr-corner.br { bottom: -3px; right: -3px; border-left: none; border-top: none; }
-        .qr-code-img img, .qr-code-img canvas { width: 4cm !important; height: 4cm !important; }
-        .qr-label { margin-top: 8px; font-size: 10px; color: #666; text-align: center; }
         
-        .placa-features {
-            display: flex;
-            padding: 8px;
-            background: #e8f5e9;
-            border-top: 1px solid #c8e6c9;
-            border-bottom: 1px solid #c8e6c9;
-        }
-        .feature { flex: 1; text-align: center; padding: 5px; border-right: 1px solid #c8e6c9; font-size: 8px; }
-        .feature:last-child { border-right: none; }
-        .feature-icon { font-size: 14px; display: block; margin-bottom: 2px; }
-        
-        .placa-como-usar {
-            padding: 10px;
-            background: #fff3e0;
-            border-bottom: 1px solid #ffe0b2;
-        }
-        .como-usar-titulo { font-size: 11px; font-weight: bold; color: #e65100; margin-bottom: 6px; text-align: center; }
-        .passo { font-size: 9px; color: #333; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
-        .passo-numero {
-            background: #ff9800;
-            color: white;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            font-weight: bold;
+        .qr-container-grande img, 
+        .qr-container-grande canvas { 
+            width: 260px !important; 
+            height: 260px !important; 
         }
         
-        .placa-footer {
+        .placa-footer-simples {
             background: #004d40;
             color: white;
             text-align: center;
-            padding: 6px;
-            font-size: 8px;
+            padding: 10px;
+            font-size: 10px;
         }
         
         .placas-grid { 
@@ -271,17 +243,6 @@
         
         .hidden { display: none !important; }
         
-        .acoes-placa {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        .btn-small {
-            flex: 1;
-            padding: 10px;
-            font-size: 0.9rem;
-        }
-        
         .contato-row { 
             display: grid; 
             grid-template-columns: 1fr 1fr auto; 
@@ -313,46 +274,56 @@
         
         .empty-state { text-align: center; padding: 60px 20px; color: #666; }
         
-        /* Print */
-        @media print {
-            @page { size: 10cm 15cm; margin: 0; }
-            body { background: white; }
-            .no-print { display: none !important; }
-            .placa-fisica { 
-                box-shadow: none;
-                page-break-after: always;
-            }
-        }
+        /* Tabela Admin */
+        .table-container { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e1e4e8; }
+        th { background: #f8f9fa; font-weight: 600; color: #555; font-size: 0.9rem; }
+        tr:hover { background: #f8f9fa; }
         
-        @media (max-width: 768px) { 
-            .placas-grid { grid-template-columns: 1fr; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #ffc107; color: #856404; border: 1px solid #ffb300; }
+        .badge-virgem { background: #fff3cd; color: #856404; font-family: monospace; font-size: 0.9rem; padding: 6px 12px; }
+        
+        .acoes-grid { display: flex; gap: 5px; }
+        .btn-xs { padding: 6px 10px; font-size: 0.8rem; }
+        
+        /* Botão PDF destacado */
+        .btn-pdf {
+            background: #dc3545;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+            padding: 16px;
+            font-size: 1.1rem;
         }
+        .btn-pdf:hover { background: #c82333; }
     </style>
 </head>
 <body>
 
 <!-- MODO ADMIN -->
 <div id="modoAdmin">
-    <div class="header no-print">
+    <div class="header">
         <h1>🏢 Painel Administrativo</h1>
-        <p>Gerador de Placas QR Code com Dados Embutidos</p>
+        <p>Gerador de Placas QR Code 10x15cm</p>
     </div>
     
-    <div class="container no-print">
+    <div class="container">
         <div class="tabs">
             <button class="tab active" onclick="switchTab('gerar')">🎨 Gerar Placas</button>
-            <button class="tab" onclick="switchTab('gerenciar')">👥 Cadastrar em Placas</button>
+            <button class="tab" onclick="switchTab('lista')">📋 Minhas Placas</button>
         </div>
 
         <!-- ETAPA 1: GERAR PLACAS -->
         <div id="tab-gerar" class="section active">
             <div class="card">
-                <div class="card-title">🎯 Gerador de Placas QR (Independentes)</div>
+                <div class="card-title">🎯 Configurar Nova Placa</div>
                 
                 <div class="info-box">
-                    <strong>💡 Como funciona:</strong><br>
-                    Os dados são codificados <strong>diretamente no QR Code</strong>. 
-                    Funciona em qualquer celular, sem precisar de banco de dados!
+                    <strong>💡 Formato:</strong> Placa 10cm x 15cm com QR Code 10cm x 10cm centralizado.<br>
+                    Ideal para imprimir em papel fotográfico ou adesivo.
                 </div>
 
                 <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
@@ -371,68 +342,54 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Quantidade de Placas</label>
+                    <label>Quantidade</label>
                     <input type="number" id="quantidade" min="1" max="10" value="1">
                 </div>
 
                 <button class="btn btn-primary" onclick="gerarPlacas()">
-                    🚀 Gerar Placas QR Code
+                    🚀 Gerar Placas QR
                 </button>
             </div>
 
-            <div id="previewGeracao" style="display: none;" class="no-print">
+            <div id="previewGeracao" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3>📦 Placas Geradas</h3>
-                    <button class="btn btn-secondary" onclick="window.print()" style="width: auto;">
-                        🖨️ Imprimir Todas
-                    </button>
                 </div>
                 <div id="areaPlacas" class="placas-grid"></div>
             </div>
         </div>
 
-        <!-- CADASTRAR EM PLACAS EXISTENTES -->
-        <div id="tab-gerenciar" class="section">
+        <!-- LISTA DE PLACAS -->
+        <div id="tab-lista" class="section">
             <div class="card">
-                <div class="card-title">📝 Cadastrar Contatos em Placas Geradas</div>
+                <div class="card-title">📋 Placas Cadastradas</div>
                 
-                <div class="info-box">
-                    Escaneie uma placa virgem ou cole o link dela aqui para cadastrar contatos.
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Código da Placa</th>
+                                <th>Local</th>
+                                <th>Tipo</th>
+                                <th>Contatos</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPlacas">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
+                                    Nenhuma placa gerada ainda
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="form-group">
-                    <label>URL da Placa (cole aqui o link que aparece na placa)</label>
-                    <input type="text" id="urlPlacaInput" placeholder="https://maikon345.github.io/#dados=...">
-                </div>
-
-                <div id="areaCadastroAdmin" style="display: none;">
-                    <div class="form-group">
-                        <label>Contatos para esta Placa</label>
-                        <div id="listaContatosAdmin"></div>
-                        <button class="btn-add" onclick="adicionarContatoAdmin()">➕ Adicionar Contato</button>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Mensagem Padrão</label>
-                        <input type="text" id="msgAdmin" value="Ola! Estou na porta/interfone.">
-                    </div>
-
-                    <button class="btn btn-primary" onclick="gerarPlacaAtualizada()">
-                        ✅ Gerar Placa Atualizada (com contatos)
-                    </button>
-                    
-                    <div id="previewAtualizada" style="margin-top: 30px;"></div>
-                </div>
-                
-                <button class="btn btn-secondary" onclick="carregarDadosURL()" style="margin-top: 10px;">
-                    🔍 Carregar Dados da URL
-                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- MODO VISITANTE (Escaneou QR) -->
+<!-- MODO VISITANTE -->
 <div id="modoVisitante" class="hidden">
     <div class="header">
         <h1>📱 Interfone Virtual</h1>
@@ -441,13 +398,12 @@
     
     <div class="container" style="max-width: 600px;">
         
-        <!-- ETAPA 2: CADASTRO (Placa sem contatos) -->
+        <!-- ETAPA 2: CADASTRO -->
         <div id="etapa2Cadastro" class="hidden">
             <div class="card">
                 <div class="warning-box">
-                    <strong>🔰 Bem-vindo!</strong><br>
-                    Esta placa ainda não tem contatos configurados. 
-                    Você é o responsável por este local? Cadastre abaixo:
+                    <strong>🔰 Placa Nova Detectada!</strong><br>
+                    Configure os contatos para ativar esta placa.
                 </div>
 
                 <div class="card-title">📝 Configurar Contatos</div>
@@ -460,38 +416,38 @@
                 <div id="contatosCadastroLista">
                     <div class="contato-row">
                         <input type="text" placeholder="Nome" class="cad-nome">
-                        <input type="tel" placeholder="WhatsApp (DDD + número)" class="cad-telefone" maxlength="13">
+                        <input type="tel" placeholder="WhatsApp (DDD+número)" class="cad-telefone" maxlength="13">
                         <button class="btn-del" onclick="this.parentElement.remove()">×</button>
                     </div>
                 </div>
                 
-                <button class="btn-add" onclick="adicionarLinhaCadastro()">➕ Adicionar outro contato</button>
+                <button class="btn-add" onclick="adicionarLinhaCadastro()">➕ Adicionar contato</button>
 
                 <div class="form-group">
-                    <label>Mensagem para Visitantes</label>
+                    <label>Mensagem Padrão</label>
                     <input type="text" id="cadMensagem" value="Ola! Estou na porta/interfone.">
                 </div>
 
-                <button class="btn btn-primary" onclick="ativarPlaca()" style="margin-top: 20px;">
-                    ✅ Ativar Interfone e Gerar Novo QR Code
+                <button class="btn btn-primary" onclick="ativarPlaca()">
+                    ✅ Ativar Interfone
                 </button>
             </div>
         </div>
 
-        <!-- ETAPA 3: USO (Placa com contatos) -->
+        <!-- ETAPA 3: USO -->
         <div id="etapa3Uso" class="hidden">
-            <div class="success-box" id="mensagemBoasVindas">
-                Escolha um contato para enviar mensagem via WhatsApp:
-            </div>
+            <div class="success-box" id="mensagemBoasVindas"></div>
 
             <div id="listaContatosVisitante"></div>
 
-            <div class="card" style="text-align: center; margin-top: 30px;">
-                <p style="color: #666; margin-bottom: 10px;">Quer criar sua própria placa?</p>
-                <a href="#" onclick="window.location.href = window.location.pathname" style="text-decoration: none;">
-                    <button class="btn btn-secondary">🏠 Criar meu Interfone Virtual</button>
-                </a>
-            </div>
+            <!-- Botão Download PDF -->
+            <button class="btn btn-pdf" onclick="baixarPDF()">
+                📄 Baixar Placa em PDF (10x15cm)
+            </button>
+            
+            <p style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9rem;">
+                Imprima em papel fotográfico 10x15cm
+            </p>
         </div>
 
         <!-- ERRO -->
@@ -499,9 +455,8 @@
             <div class="empty-state">
                 <div style="font-size: 4rem; margin-bottom: 20px;">❌</div>
                 <h3>QR Code inválido</h3>
-                <p>Não foi possível ler os dados desta placa.</p>
                 <a href="#" onclick="window.location.href = window.location.pathname" style="text-decoration: none;">
-                    <button class="btn btn-primary" style="margin-top: 20px;">Criar Nova Placa</button>
+                    <button class="btn btn-primary" style="margin-top: 20px;">Voltar ao Início</button>
                 </a>
             </div>
         </div>
@@ -509,32 +464,28 @@
 </div>
 
 <script>
-// ============ SISTEMA DE CODIFICAÇÃO ============
-// Codifica dados na URL (funciona em qualquer dispositivo)
+// Armazena placas geradas nesta sessão
+let placasGeradas = [];
+
+// Codificação
 function encodeData(data) {
     return btoa(JSON.stringify(data)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 function decodeData(str) {
     try {
-        // Restaura base64
         str = str.replace(/-/g, '+').replace(/_/g, '/');
-        // Adiciona padding se necessário
         while (str.length % 4) str += '=';
         return JSON.parse(atob(str));
-    } catch(e) {
-        return null;
-    }
+    } catch(e) { return null; }
 }
 
-// ============ INICIALIZAÇÃO ============
+// Inicialização
 window.onload = function() {
-    // Verifica se tem dados na URL (modo visitante)
     const hash = window.location.hash;
     if (hash && hash.includes('dados=')) {
         const params = new URLSearchParams(hash.substring(1));
         const dadosCodificados = params.get('dados');
-        
         if (dadosCodificados) {
             const dados = decodeData(dadosCodificados);
             if (dados) {
@@ -544,13 +495,21 @@ window.onload = function() {
         }
         mostrarErro();
     } else {
-        // Modo admin
         document.getElementById('modoAdmin').classList.remove('hidden');
         document.getElementById('modoVisitante').classList.add('hidden');
     }
 };
 
-// ============ ETAPA 1: GERAR PLACAS VIRGENS ============
+function switchTab(tab) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+    
+    if (tab === 'lista') atualizarTabela();
+}
+
+// ETAPA 1: GERAR PLACAS
 function gerarPlacas() {
     const nomeLocal = document.getElementById('nomeLocal').value || 'Interfone Virtual';
     const tipo = document.getElementById('tipoLocal').value;
@@ -558,107 +517,58 @@ function gerarPlacas() {
     
     const container = document.getElementById('areaPlacas');
     container.innerHTML = '';
+    placasGeradas = [];
     
     for (let i = 0; i < qtd; i++) {
-        // Cria dados da placa virgem
+        const id = Date.now() + '-' + Math.random().toString(36).substr(2, 5);
         const dados = {
-            id: Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+            id: id,
             nome: nomeLocal,
             tipo: tipo,
             contatos: [],
             mensagem: 'Ola! Estou na porta/interfone.',
             virgem: true,
-            data: new Date().toISOString()
+            data: new Date().toLocaleString('pt-BR')
         };
         
-        const dadosCodificados = encodeData(dados);
-        const urlBase = window.location.origin + window.location.pathname;
-        const urlCompleta = `${urlBase}#dados=${dadosCodificados}`;
+        placasGeradas.push(dados);
+        const dadosCod = encodeData(dados);
+        const url = `${window.location.origin}${window.location.pathname}#dados=${dadosCod}`;
         
-        // Cria visual da placa
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `
-            <div class="placa-fisica">
+        const div = document.createElement('div');
+        div.innerHTML = `
+            <div class="placa-fisica" id="placa-${id}">
                 <div class="placa-header">
                     <div class="placa-icon">📱</div>
                     <div class="placa-titulo">INTERFONE VIRTUAL</div>
                     <div class="placa-subtitulo">${nomeLocal}</div>
                 </div>
-                
                 <div class="placa-qr-area">
-                    <div class="qr-container">
-                        <div class="qr-corner tl"></div>
-                        <div class="qr-corner tr"></div>
-                        <div class="qr-corner bl"></div>
-                        <div class="qr-corner br"></div>
-                        <div class="qr-code-img" id="qr-${dados.id}"></div>
-                    </div>
-                    <div class="qr-label">
-                        <strong>Escaneie para conectar</strong><br>
-                        <small style="font-size: 8px; color: #999;">${tipo.toUpperCase()}</small>
+                    <div class="qr-container-grande">
+                        <div class="qr-code-img" id="qr-${id}"></div>
                     </div>
                 </div>
-                
-                <div class="placa-features">
-                    <div class="feature">
-                        <span class="feature-icon">📷</span>
-                        <strong>QR Code</strong><br>
-                        <small>Aponte e toque</small>
-                    </div>
-                    <div class="feature">
-                        <span class="feature-icon">👥</span>
-                        <strong>Multi-contatos</strong><br>
-                        <small>Escolha quem chamar</small>
-                    </div>
-                    <div class="feature">
-                        <span class="feature-icon">💬</span>
-                        <strong>WhatsApp</strong><br>
-                        <small>Direto no app</small>
-                    </div>
-                </div>
-                
-                <div class="placa-como-usar">
-                    <div class="como-usar-titulo">📋 COMO USAR:</div>
-                    <div class="passo">
-                        <span class="passo-numero">1</span>
-                        <span>Abra a câmera do celular</span>
-                    </div>
-                    <div class="passo">
-                        <span class="passo-numero">2</span>
-                        <span>Aponte para este QR Code</span>
-                    </div>
-                    <div class="passo">
-                        <span class="passo-numero">3</span>
-                        <span>Toque no link</span>
-                    </div>
-                    <div class="passo">
-                        <span class="passo-numero">4</span>
-                        <span>Cadastre seus contatos!</span>
-                    </div>
-                </div>
-                
-                <div class="placa-footer">
-                    🔊 Interfone Virtual • Toque para chamar
+                <div class="placa-footer-simples">
+                    ESCANEIE PARA CONECTAR • ${tipo.toUpperCase()}
                 </div>
             </div>
-            
-            <div class="acoes-placa no-print">
-                <button class="btn btn-secondary btn-small" onclick="imprimirPlaca(this)">🖨️ Imprimir</button>
-                <button class="btn btn-primary btn-small" onclick="copiarLink('${urlCompleta}')">📋 Copiar Link</button>
-            </div>
-            <div class="no-print" style="margin-top: 10px; font-size: 0.75rem; color: #666; word-break: break-all;">
-                ${urlCompleta}
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="gerarPDFIndividual('${id}')" style="width: 100%;">
+                    📄 Baixar PDF 10x15cm
+                </button>
+                <button class="btn btn-secondary" onclick="imprimirPlaca('${id}')" style="width: 100%; margin-top: 8px;">
+                    🖨️ Imprimir
+                </button>
             </div>
         `;
         
-        container.appendChild(wrapper);
+        container.appendChild(div);
         
-        // Gera QR Code
         setTimeout(() => {
-            new QRCode(document.getElementById(`qr-${dados.id}`), {
-                text: urlCompleta,
-                width: 150,
-                height: 150,
+            new QRCode(document.getElementById(`qr-${id}`), {
+                text: url,
+                width: 260,
+                height: 260,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
@@ -667,28 +577,52 @@ function gerarPlacas() {
     }
     
     document.getElementById('previewGeracao').style.display = 'block';
-    setTimeout(() => {
-        document.getElementById('previewGeracao').scrollIntoView({behavior: 'smooth'});
-    }, 200);
+    atualizarTabela();
 }
 
-// ============ ETAPA 2 & 3: MODO VISITANTE ============
+function atualizarTabela() {
+    const tbody = document.getElementById('tabelaPlacas');
+    if (placasGeradas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #666;">Nenhuma placa gerada nesta sessão</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    placasGeradas.forEach(placa => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                ${placa.virgem ? 
+                    `<span class="badge-virgem">${placa.id}</span>` : 
+                    `<code style="background: #f4f4f4; padding: 4px 8px; border-radius: 4px;">${placa.id}</code>`
+                }
+            </td>
+            <td>${placa.nome}</td>
+            <td>${placa.tipo}</td>
+            <td>${placa.contatos.length} contato(s)</td>
+            <td>
+                <div class="acoes-grid">
+                    <button class="btn btn-warning btn-xs" onclick="gerarPDFPlaca('${placa.id}')">
+                        📄 PDF
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ETAPA 2 & 3
 function mostrarModoVisitante(dados) {
+    window.dadosPlacaAtual = dados;
     document.getElementById('modoAdmin').classList.add('hidden');
     document.getElementById('modoVisitante').classList.remove('hidden');
-    
-    document.getElementById('subtituloVisitante').textContent = dados.nome || 'Interfone Virtual';
-    
-    // Salva dados globalmente para uso nas funções
-    window.dadosPlacaAtual = dados;
+    document.getElementById('subtituloVisitante').textContent = dados.nome;
     
     if (dados.virgem || !dados.contatos || dados.contatos.length === 0) {
-        // ETAPA 2: Mostrar cadastro
         document.getElementById('etapa2Cadastro').classList.remove('hidden');
-        document.getElementById('etapa3Uso').classList.add('hidden');
-        document.getElementById('cadLocalNome').value = dados.nome || '';
+        document.getElementById('cadLocalNome').value = dados.nome;
     } else {
-        // ETAPA 3: Mostrar contatos
         document.getElementById('etapa2Cadastro').classList.add('hidden');
         document.getElementById('etapa3Uso').classList.remove('hidden');
         mostrarContatos(dados);
@@ -706,19 +640,17 @@ function adicionarLinhaCadastro() {
     div.className = 'contato-row';
     div.innerHTML = `
         <input type="text" placeholder="Nome" class="cad-nome">
-        <input type="tel" placeholder="WhatsApp (com DDD)" class="cad-telefone" maxlength="13">
+        <input type="tel" placeholder="WhatsApp" class="cad-telefone" maxlength="13">
         <button class="btn-del" onclick="this.parentElement.remove()">×</button>
     `;
     document.getElementById('contatosCadastroLista').appendChild(div);
-    
-    div.querySelector('.cad-telefone').addEventListener('input', function(e) {
+    div.querySelector('.cad-telefone').addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/\D/g, '');
     });
 }
 
 function ativarPlaca() {
     const dados = window.dadosPlacaAtual;
-    
     const nomes = document.querySelectorAll('.cad-nome');
     const telefones = document.querySelectorAll('.cad-telefone');
     const contatos = [];
@@ -727,69 +659,32 @@ function ativarPlaca() {
         if (nomes[i].value && telefones[i].value) {
             let tel = telefones[i].value.replace(/\D/g, '');
             if (!tel.startsWith('55')) tel = '55' + tel;
-            contatos.push({
-                nome: nomes[i].value,
-                telefone: tel
-            });
+            contatos.push({ nome: nomes[i].value, telefone: tel });
         }
     }
     
     if (contatos.length === 0) {
-        alert('⚠️ Adicione pelo menos um contato!');
+        alert('Adicione pelo menos um contato!');
         return;
     }
     
-    // Atualiza dados
     dados.contatos = contatos;
     dados.mensagem = document.getElementById('cadMensagem').value;
     dados.nome = document.getElementById('cadLocalNome').value || dados.nome;
     dados.virgem = false;
     
-    // Gera nova URL com dados atualizados
-    const dadosCodificados = encodeData(dados);
-    const novaUrl = `${window.location.origin}${window.location.pathname}#dados=${dadosCodificados}`;
+    // Atualiza URL
+    const dadosCod = encodeData(dados);
+    window.history.replaceState(null, null, `#dados=${dadosCod}`);
     
-    // Mostra etapa 3 com os contatos
-    mostrarContatos(dados);
+    // Atualiza lista de placas se existir
+    const idx = placasGeradas.findIndex(p => p.id === dados.id);
+    if (idx >= 0) placasGeradas[idx] = dados;
+    
+    // Mostra uso
     document.getElementById('etapa2Cadastro').classList.add('hidden');
     document.getElementById('etapa3Uso').classList.remove('hidden');
-    
-    // Mostra mensagem com novo QR Code
-    const container = document.getElementById('etapa3Uso');
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.style.marginTop = '20px';
-    div.innerHTML = `
-        <div class="success-box">
-            <strong>✅ Interfone Ativado!</strong><br>
-            Agora você pode usar esta placa. Recomendamos salvar ou imprimir o novo QR Code abaixo:
-        </div>
-        <div style="text-align: center; padding: 20px;">
-            <div id="qr-atualizado" style="display: inline-block; padding: 20px; border: 2px solid #25d366; border-radius: 10px;"></div>
-            <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
-                Este é o QR Code definitivo com seus contatos.<br>
-                <button class="btn btn-primary" onclick="copiarLink('${novaUrl}')" style="margin-top: 10px;">
-                    📋 Copiar Link Atualizado
-                </button>
-            </p>
-        </div>
-    `;
-    container.insertBefore(div, container.firstChild);
-    
-    // Gera QR Code atualizado
-    setTimeout(() => {
-        new QRCode(document.getElementById('qr-atualizado'), {
-            text: novaUrl,
-            width: 200,
-            height: 200,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    }, 100);
-    
-    // Atualiza URL sem recarregar
-    window.history.replaceState(null, null, `#dados=${dadosCodificados}`);
+    mostrarContatos(dados);
 }
 
 function mostrarContatos(dados) {
@@ -798,27 +693,21 @@ function mostrarContatos(dados) {
     
     document.getElementById('mensagemBoasVindas').innerHTML = `
         <strong>🏠 ${dados.nome}</strong><br>
-        Toque em um contato para enviar:<br>
-        <em>"${dados.mensagem || 'Ola! Estou na porta/interfone.'}"</em>
+        Toque para enviar: "${dados.mensagem || 'Ola! Estou na porta/interfone.'}"
     `;
     
-    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'];
     
-    dados.contatos.forEach((contato, index) => {
-        const initial = contato.nome.charAt(0).toUpperCase();
-        const color = colors[index % colors.length];
-        const mensagem = encodeURIComponent(dados.mensagem || 'Ola! Estou na porta/interfone.');
-        const linkWhats = `https://wa.me/${contato.telefone}?text=${mensagem}`;
-        
+    dados.contatos.forEach((c, i) => {
         const card = document.createElement('a');
         card.className = 'contato-card';
-        card.href = linkWhats;
+        card.href = `https://wa.me/${c.telefone}?text=${encodeURIComponent(dados.mensagem)}`;
         card.target = '_blank';
         card.innerHTML = `
-            <div class="avatar" style="background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%);">${initial}</div>
+            <div class="avatar" style="background: ${colors[i % colors.length]};">${c.nome.charAt(0).toUpperCase()}</div>
             <div class="contato-info">
-                <div class="contato-nome">${contato.nome}</div>
-                <div style="color: #666; font-size: 0.9rem;">📱 ${contato.telefone}</div>
+                <div class="contato-nome">${c.nome}</div>
+                <div style="color: #666; font-size: 0.9rem;">📱 ${c.telefone}</div>
             </div>
             <div class="wa-icon">💬</div>
         `;
@@ -826,183 +715,131 @@ function mostrarContatos(dados) {
     });
 }
 
-// ============ ADMIN: CADASTRAR EM PLACAS ============
-function switchTab(tab) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    event.target.classList.add('active');
+// GERAÇÃO DE PDF
+async function gerarPDFIndividual(id) {
+    const placa = placasGeradas.find(p => p.id === id);
+    if (!placa) return;
+    
+    await gerarPDFPlacaDados(placa);
 }
 
-function carregarDadosURL() {
-    const url = document.getElementById('urlPlacaInput').value;
-    if (!url) {
-        alert('Cole a URL da placa primeiro!');
-        return;
-    }
-    
-    try {
-        const hash = url.split('#')[1];
-        if (hash && hash.includes('dados=')) {
-            const params = new URLSearchParams(hash);
-            const dados = decodeData(params.get('dados'));
-            if (dados) {
-                window.dadosPlacaAdmin = dados;
-                document.getElementById('areaCadastroAdmin').style.display = 'block';
-                document.getElementById('cadLocalNome').value = dados.nome || '';
-                
-                // Limpa e preenche contatos existentes se houver
-                const lista = document.getElementById('listaContatosAdmin');
-                lista.innerHTML = '';
-                if (dados.contatos && dados.contatos.length > 0) {
-                    dados.contatos.forEach(c => {
-                        adicionarContatoAdmin(c.nome, c.telefone);
-                    });
-                } else {
-                    adicionarContatoAdmin();
-                }
-            } else {
-                alert('URL inválida ou dados corrompidos!');
-            }
-        } else {
-            alert('URL não contém dados de placa!');
-        }
-    } catch(e) {
-        alert('Erro ao ler URL: ' + e.message);
-    }
+async function gerarPDFPlaca(id) {
+    const placa = placasGeradas.find(p => p.id === id);
+    if (!placa) return;
+    await gerarPDFPlacaDados(placa);
 }
 
-function adicionarContatoAdmin(nome = '', telefone = '') {
-    const div = document.createElement('div');
-    div.className = 'contato-row';
-    div.innerHTML = `
-        <input type="text" placeholder="Nome" class="admin-nome" value="${nome}">
-        <input type="tel" placeholder="WhatsApp (com DDD)" class="admin-telefone" value="${telefone}" maxlength="13">
-        <button class="btn-del" onclick="this.parentElement.remove()">×</button>
-    `;
-    document.getElementById('listaContatosAdmin').appendChild(div);
-    
-    div.querySelector('.admin-telefone').addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/\D/g, '');
+async function baixarPDF() {
+    if (!window.dadosPlacaAtual) return;
+    await gerarPDFPlacaDados(window.dadosPlacaAtual);
+}
+
+async function gerarPDFPlacaDados(dados) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [100, 150] // 10cm x 15cm
     });
-}
-
-function gerarPlacaAtualizada() {
-    if (!window.dadosPlacaAdmin) {
-        alert('Carregue os dados da placa primeiro!');
-        return;
-    }
     
-    const dados = window.dadosPlacaAdmin;
-    const nomes = document.querySelectorAll('.admin-nome');
-    const telefones = document.querySelectorAll('.admin-telefone');
-    const contatos = [];
+    // Fundo branco
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, 100, 150, 'F');
     
-    for (let i = 0; i < nomes.length; i++) {
-        if (nomes[i].value && telefones[i].value) {
-            let tel = telefones[i].value.replace(/\D/g, '');
-            if (!tel.startsWith('55')) tel = '55' + tel;
-            contatos.push({
-                nome: nomes[i].value,
-                telefone: tel
-            });
+    // Cabeçalho verde (3cm altura)
+    doc.setFillColor(37, 211, 102); // #25d366
+    doc.rect(0, 0, 100, 30, 'F');
+    
+    // Gradiente simulado (retângulos sobrepostos)
+    doc.setFillColor(18, 140, 126); // #128C7E
+    doc.rect(0, 30, 100, 5, 'F');
+    
+    // Ícone (simulado com círculo)
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(255, 255, 255);
+    doc.circle(50, 12, 5, 'FD');
+    
+    // Título
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("INTERFONE VIRTUAL", 50, 22, { align: "center" });
+    
+    // Subtítulo
+    doc.setFontSize(10);
+    doc.text(dados.nome, 50, 28, { align: "center" });
+    
+    // QR Code (10cm x 10cm) - posição central
+    const url = `${window.location.origin}${window.location.pathname}#dados=${encodeData(dados)}`;
+    
+    // Cria QR Code temporário para capturar
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    document.body.appendChild(tempDiv);
+    
+    new QRCode(tempDiv, {
+        text: url,
+        width: 400,
+        height: 400,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Aguarda renderização e converte para imagem
+    setTimeout(async () => {
+        const canvas = tempDiv.querySelector('canvas');
+        if (canvas) {
+            const imgData = canvas.toDataURL('image/png');
+            
+            // Borda verde ao redor do QR
+            doc.setDrawColor(37, 211, 102);
+            doc.setLineWidth(1);
+            doc.rect(5, 35, 90, 90); // 10cm x 10cm (100mm x 100mm) com margem
+            
+            // Insere QR Code (90mm x 90mm para caber na borda)
+            doc.addImage(imgData, 'PNG', 7.5, 37.5, 85, 85);
         }
-    }
-    
-    dados.contatos = contatos;
-    dados.mensagem = document.getElementById('msgAdmin').value;
-    dados.nome = document.getElementById('cadLocalNome').value || dados.nome;
-    dados.virgem = false;
-    
-    // Gera novo QR Code
-    const dadosCodificados = encodeData(dados);
-    const urlCompleta = `${window.location.origin}${window.location.pathname}#dados=${dadosCodificados}`;
-    
-    const container = document.getElementById('previewAtualizada');
-    container.innerHTML = `
-        <h3 style="margin-bottom: 15px;">✅ Placa Atualizada (com contatos):</h3>
-        <div class="placa-fisica" style="margin: 0 auto;">
-            <div class="placa-header">
-                <div class="placa-icon">📱</div>
-                <div class="placa-titulo">INTERFONE VIRTUAL</div>
-                <div class="placa-subtitulo">${dados.nome}</div>
-            </div>
-            <div class="placa-qr-area">
-                <div class="qr-container">
-                    <div class="qr-corner tl"></div>
-                    <div class="qr-corner tr"></div>
-                    <div class="qr-corner bl"></div>
-                    <div class="qr-corner br"></div>
-                    <div id="qr-admin-gerado"></div>
-                </div>
-                <div class="qr-label"><strong>Escaneie para conectar</strong></div>
-            </div>
-            <div class="placa-features">
-                <div class="feature"><span class="feature-icon">📷</span><strong>QR Code</strong></div>
-                <div class="feature"><span class="feature-icon">👥</span><strong>${contatos.length} Contatos</strong></div>
-                <div class="feature"><span class="feature-icon">💬</span><strong>WhatsApp</strong></div>
-            </div>
-            <div class="placa-footer">✅ PLACA ATIVADA • PRONTA PARA USAR</div>
-        </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="btn btn-primary" onclick="copiarLink('${urlCompleta}')">📋 Copiar Link Atualizado</button>
-            <button class="btn btn-secondary" onclick="window.print()" style="margin-left: 10px;">🖨️ Imprimir</button>
-        </div>
-        <div style="margin-top: 10px; font-size: 0.8rem; color: #666; word-break: break-all; text-align: center;">
-            ${urlCompleta}
-        </div>
-    `;
-    
-    setTimeout(() => {
-        new QRCode(document.getElementById('qr-admin-gerado'), {
-            text: urlCompleta,
-            width: 150,
-            height: 150,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    }, 100);
+        document.body.removeChild(tempDiv);
+        
+        // Rodapé (2cm altura)
+        doc.setFillColor(0, 77, 64); // #004d40
+        doc.rect(0, 140, 100, 10, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.text("ESCANEIE PARA CONECTAR • " + dados.tipo.toUpperCase(), 50, 146, { align: "center" });
+        
+        // Salva
+        doc.save(`placa-interfone-${dados.id}.pdf`);
+    }, 500);
 }
 
-// ============ UTILITÁRIOS ============
-function imprimirPlaca(btn) {
-    const placa = btn.closest('.acoes-placa').previousElementSibling;
+function imprimirPlaca(id) {
+    const el = document.getElementById(`placa-${id}`);
+    if (!el) return;
+    
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <html>
         <head>
             <title>Imprimir Placa</title>
             <style>
-                @page { size: 10cm 15cm; margin: 0; }
-                body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #f0f2f5; }
-                ${document.querySelector('style').innerHTML}
+                @page { size: 100mm 150mm; margin: 0; }
+                body { margin: 0; padding: 0; }
+                * { box-sizing: border-box; }
             </style>
         </head>
         <body>
-            ${placa.outerHTML}
+            ${el.outerHTML}
             <script>
-                setTimeout(() => window.print(), 500);
+                window.onload = function() { window.print(); }
             <\/script>
         </body>
         </html>
     `);
     printWindow.document.close();
-}
-
-function copiarLink(url) {
-    navigator.clipboard.writeText(url).then(() => {
-        alert('✅ Link copiado!\n\nAgora você pode compartilhar ou salvar esta placa.');
-    }).catch(() => {
-        // Fallback
-        const input = document.createElement('input');
-        input.value = url;
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-        alert('✅ Link copiado!');
-    });
 }
 </script>
 
